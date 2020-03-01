@@ -271,6 +271,16 @@ class CM_ND_PianoRollNode(bpy.types.Node):
         if self.frame_num >= bpy.context.scene.frame_end:
             bpy.ops.screen.animation_cancel(restore_frame=True)
             bpy.app.handlers.frame_change_post.remove(start_piano)
+            for area in bpy.context.screen.areas:
+                if area.type == 'VIEW_3D':
+                    area.spaces[0].region_3d.view_location.x = (
+                        area.spaces[0].region_3d.view_location.x
+                        -  (self.frame_num * 0.1))
+        else:
+            for area in bpy.context.screen.areas:
+                if area.type == 'VIEW_3D':
+                    area.spaces[0].region_3d.view_location.x = (
+                        area.spaces[0].region_3d.view_location.x + 0.1)
         collection = bpy.data.collections.get(self.collection)
         if collection is not None:
             pointer = bpy.data.objects[self.pointer]
