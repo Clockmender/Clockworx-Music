@@ -234,6 +234,7 @@ class CM_ND_PianoRollNode(bpy.types.Node):
     pointer : StringProperty(name="Pointer", default="Pointer",
         description='Name of Pointer Object, this will store the sound "Recipe"')
     frame_num: bpy.props.IntProperty(name="Frame")
+    volume : FloatProperty(name="Volume", default=1, min=0.1)
     gen_type: EnumProperty(
         items=(
             ("sine", "Sine", "Sine Waveform"),
@@ -255,7 +256,9 @@ class CM_ND_PianoRollNode(bpy.types.Node):
         layout.prop(self, "collection")
         layout.prop(self, "pointer")
         #layout.prop(cm_pg, "time_note_min")
-        layout.prop(self, "frame_num")
+        row = layout.row()
+        row.prop(self, "frame_num")
+        row.prop(self, "volume")
         layout.prop(self, "gen_type")
         layout.label(text="")
         layout.operator("cm_audio.evaluate_piano", icon="LONGDISPLAY")
@@ -303,6 +306,7 @@ class CM_ND_PianoRollNode(bpy.types.Node):
                     pointer["sound"][f"{self.frame_num}-{num}"] = [freq, delay, length]
                     snd = osc_generate([0,freq], self.gen_type, cm.samples)
                     snd = snd.limit(0, length).rechannel(cm.sound_channels)
+                    snd = snd.volume(self.volume)
                     num = num + 1
                     aud.Device().play(snd)
 
@@ -316,7 +320,7 @@ class CM_ND_PianoRollNode(bpy.types.Node):
             for key in keys:
                 data = pointer["sound"][key]
                 snd = osc_generate([0,data[0]], self.gen_type, cm.samples)
-                snd = snd.volume(1)
+                snd = snd.volume(self.volume)
                 snd = snd.limit(0, data[2]).delay(data[1]).rechannel(cm.sound_channels)
                 if first:
                     sound = snd
