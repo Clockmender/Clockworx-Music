@@ -21,5 +21,7 @@ Contact me via the Issues page with any questions, or suggestions.
 ## Installation:
 
 Download the Repo.
+
 Zip up the **Clockworx-Music** folder.
+
 Install like any other Blender Add-on from User Preferences.
