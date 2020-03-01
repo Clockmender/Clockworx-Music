@@ -4,7 +4,7 @@
 
 A set of Nodes and New Node Editor to produce Music from Animations and Animations from Music
 
-Very much a WIP for now, some experimental code that will need making into a fully compliant BLender Add-on.
+Very much a WIP for now, some experimental code that will need making into a fully compliant Blender Add-on.
 
 The idea is to be able to produce animations from MIDI files, sounds from MIDI files and Procedural Sounds to load into VSE to make sound tracks to animations. It will also feature some low level DAW functions to allow the production of music from a Pianoroll.
 
