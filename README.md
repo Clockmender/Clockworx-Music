@@ -17,3 +17,9 @@ More work needs to be done, so please don't use this for production until a rele
 ![Main Image 3](https://github.com/Clockmender/Clockworx-Music/blob/master/images/cm-2.png)
 
 Contact me via the Issues page with any questions, or suggestions.
+
+## Installation:
+
+Download the Repo.
+Zip up the **Clockworx-Music** folder.
+Install like any other Blender Add-on from User Preferences.
