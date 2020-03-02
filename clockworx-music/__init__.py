@@ -192,7 +192,6 @@ categories = [
     ]),
         AudioSequenceNodeCategory("AUDIO_OBJECT_CATEGORY", "Objects", items = [
         NodeItem("cm_audio.object_loc_node"),
-        NodeItem("cm_audio.object_rot_node"),
         NodeItem("cm_audio.piano_roll_node"),
     ]),
 ]
@@ -252,11 +251,13 @@ classes = [
     cm_midi_bake.CM_OT_CreateMIDIControls,
     cm_midi_bake.CM_OT_CreateMIDISound,
     cm_objects.CM_ND_ObjectLocNode,
-    cm_objects.CM_ND_ObjectRotNode,
     cm_objects.CM_ND_PianoRollNode,
     cm_objects.CM_OT_EvaluatePiano,
     cm_objects.CM_OT_EvaluateNotes,
     cm_objects.CM_OT_UnlockView,
+    cm_objects.CM_OT_GetName,
+    cm_objects.CM_OT_GetSuffix,
+    cm_objects.CM_OT_GetTarget,
     ]
 
 

@@ -24,6 +24,7 @@
 import aud
 import bpy
 from math import pi
+from mathutils import Vector, Euler
 
 from bpy.props import (
     IntProperty,
@@ -55,6 +56,48 @@ def start_piano(scene):
         for n in nodetree.nodes:
             if (hasattr(n, "evaluate")):
                 n.evaluate()
+
+
+class CM_OT_GetName(bpy.types.Operator):
+    """Set from Active Obect"""
+
+    bl_idname = "cm_audio.get_name"
+    bl_label = ""
+
+    def execute(self, context):
+        cm_node = context.node
+        obj = context.view_layer.objects.active
+        if obj is not None:
+            cm_node.control_name = obj.name
+        return {"FINISHED"}
+
+
+class CM_OT_GetTarget(bpy.types.Operator):
+    """Set from Active Obect"""
+
+    bl_idname = "cm_audio.get_target"
+    bl_label = ""
+
+    def execute(self, context):
+        cm_node = context.node
+        obj = context.view_layer.objects.active
+        if obj is not None:
+            cm_node.object_name = obj.name
+        return {"FINISHED"}
+
+
+class CM_OT_GetSuffix(bpy.types.Operator):
+    """Set from Active Obect"""
+
+    bl_idname = "cm_audio.get_suffix"
+    bl_label = ""
+
+    def execute(self, context):
+        cm_node = context.node
+        obj = context.view_layer.objects.active
+        if obj is not None:
+            cm_node.suffix = obj.name.split("_")[2]
+        return {"FINISHED"}
 
 
 class CM_OT_UnlockView(bpy.types.Operator):
@@ -108,121 +151,106 @@ class CM_OT_EvaluateNotes(bpy.types.Operator):
 
 class CM_ND_ObjectLocNode(bpy.types.Node):
     bl_idname = "cm_audio.object_loc_node"
-    bl_label = "Animate Object's Location"
+    bl_label = "Animate Objects"
     bl_icon = "SPEAKER"
 
     control_name : StringProperty(name="Control", default="")
-    object_loc : FloatVectorProperty(name="Location", subtype="XYZ", default=(0,0,0))
-    factor : FloatProperty(name="Factor", default=0)
-    axis_c : IntProperty(name="Control Axis", min=0, max=2, default=2)
-    axis_t : IntProperty(name="Target Axis", min=0, max=2, default=2)
+    factor_x : FloatProperty(name="Factor X", default=1)
+    factor_y : FloatProperty(name="Factor Y", default=1)
+    factor_z : FloatProperty(name="Factor Z", default=1)
+    lx_bool : BoolProperty(name="X", default=False)
+    ly_bool : BoolProperty(name="Y", default=False)
+    lz_bool : BoolProperty(name="Z", default=False)
     object_name : StringProperty(name="Target", default="")
     animate_group : BoolProperty(name="Animate List", default=False)
     suffix : StringProperty(name="Suffix", default="obj")
-    offset : FloatProperty(name="Offset (D)", default=0)
     message : StringProperty(name="Info")
+    anim_type: EnumProperty(
+        items=(
+            ("loc", "Location", "Animate Location"),
+            ("rot", "Rotation", "Animate Rotation"),
+            ("scl", "Scale", "Animate Scale"),
+        ),
+        name="Animate:",
+        default="loc",
+        description="Animation Type",
+    )
+
 
     def draw_buttons(self, context, layout):
         box = layout.box()
-        box.prop(self, "control_name")
+        box.prop(self, "anim_type")
         row = box.row()
-        split = row.split(factor=0.35, align=True)
-        split.label(text="Location")
-        split.prop(self, "object_loc", text="")
-        box.prop(self, "axis_c")
-        box.prop(self, "factor")
-        box.prop(self, "offset")
-        box.prop(self, "object_name")
-        box.prop(self, "axis_t")
+        row.prop(self, "control_name")
+        row.operator("cm_audio.get_name", text="", icon="EYEDROPPER")
+        row = box.row()
+        box.prop(self, "factor_x")
+        box.prop(self, "factor_y")
+        box.prop(self, "factor_z")
+        row = box.row()
+        row.prop(self, "lx_bool")
+        row.prop(self, "ly_bool")
+        row.prop(self, "lz_bool")
+        row = box.row()
+        row.prop(self, "object_name")
+        row.operator("cm_audio.get_target", text="", icon="EYEDROPPER")
         layout.label(text="")
         box = layout.box()
         box.prop(self, "message", text="")
         box.prop(self, "animate_group")
-        box.prop(self, "suffix")
-
+        row = box.row()
+        row.prop(self, "suffix")
+        row.operator("cm_audio.get_suffix", text="", icon="EYEDROPPER")
 
     def execute(self):
+        def off_set(obj):
+            a_offset = obj.matrix_world.decompose()[0].z
+            x_loc = 0
+            y_loc = 0
+            z_loc = 0
+            if self.lx_bool:
+                x_loc = a_offset * self.factor_x
+            if self.ly_bool:
+                y_loc = a_offset * self.factor_y
+            if self.lz_bool:
+                z_loc = a_offset * self.factor_z
+            return (
+                Vector((x_loc, y_loc, z_loc)),
+                Euler(((x_loc * pi / 18), (y_loc * pi / 18), (z_loc * pi / 18))),
+                Vector(((1 + x_loc), (1 + y_loc), (1 + z_loc)))
+                )
+
         if not self.animate_group:
             self.message = "List Function Inactive"
             obj = bpy.data.objects[self.control_name]
             if obj is not None:
-                self.object_loc = obj.matrix_world.decompose()[0]
-                tgt = bpy.data.objects[self.object_name]
-                if tgt is not None:
-                    tgt.location[self.axis_t] = (
-                        (self.object_loc[self.axis_c] * self.factor) + self.offset
-                        )
+                vector_delta, euler_delta, scale_delta = off_set(obj)
+                tgt_obj = bpy.data.objects[self.object_name]
+                if tgt_obj is not None:
+                    if self.anim_type == "loc":
+                        tgt_obj.delta_location = vector_delta
+                    elif self.anim_type == "rot":
+                        tgt_obj.delta_rotation_euler = euler_delta
+                    else:
+                        tgt_obj.delta_scale = scale_delta
+
         else:
             search = self.control_name.split("_")[1]
-            self.message = f"Using: {search} to find Controls"
+            self.message = f"Using: '{search}' to find Controls"
             objs_list = ([o for o in bpy.data.objects
                 if len(o.name.split("_")) == 2
                 and o.name.split("_")[1] == search]
                 )
             for obj in objs_list:
-                tgt = bpy.data.objects[f"{obj.name}_{self.suffix}"]
-                if tgt is not None:
-                    tgt.location[self.axis_t] = (
-                        (obj.location[self.axis_c] * self.factor) + self.offset
-                        )
+                vector_delta, euler_delta, scale_delta = off_set(obj)
+                tgt_obj = bpy.data.objects[f"{obj.name}_{self.suffix}"]
+                if self.anim_type == "loc":
+                    tgt_obj.delta_location = vector_delta
+                elif self.anim_type == "rot":
+                    tgt_obj.delta_rotation_euler = euler_delta
+                else:
+                    tgt_obj.delta_scale = scale_delta
 
-
-class CM_ND_ObjectRotNode(bpy.types.Node):
-    bl_idname = "cm_audio.object_rot_node"
-    bl_label = "Animate Object's Rotation"
-    bl_icon = "SPEAKER"
-
-    control_name : StringProperty(name="Control", default="")
-    object_rot : FloatVectorProperty(name="Rotation", subtype="XYZ", default=(0,0,0))
-    factor : FloatProperty(name="Factor", default=0)
-    axis_c : IntProperty(name="Control Axis", min=0, max=2, default=2)
-    axis_t : IntProperty(name="Target Axis", min=0, max=2, default=2)
-    object_name : StringProperty(name="Target", default="")
-    animate_group : BoolProperty(name="Animate List", default=False)
-    suffix : StringProperty(name="Suffix", default="obj")
-    offset : FloatProperty(name="Offset (D)", default=0)
-    message : StringProperty(name="Info")
-
-    def draw_buttons(self, context, layout):
-        box = layout.box()
-        box.prop(self, "control_name")
-        row = box.row()
-        split = row.split(factor=0.35, align=True)
-        split.label(text="Rotation")
-        split.prop(self, "object_rot", text="")
-        box.prop(self, "axis_c")
-        box.prop(self, "factor")
-        box.prop(self, "offset")
-        box.prop(self, "object_name")
-        box.prop(self, "axis_t")
-        layout.label(text="")
-        box = layout.box()
-        box.prop(self, "message", text="")
-        box.prop(self, "animate_group")
-        box.prop(self, "suffix")
-
-    def execute(self):
-        if not self.animate_group:
-            self.message = "List Function Inactive"
-            obj = bpy.data.objects[self.control_name]
-            if obj is not None:
-                self.object_rot = obj.matrix_world.decompose()[0]
-                tgt = bpy.data.objects[self.object_name]
-                if tgt is not None:
-                    rot_ang = (self.object_rot[self.axis_c] * self.factor) * pi / 180
-                    tgt.rotation_euler[self.axis_t] = (rot_ang + (self.offset * pi / 180))
-        else:
-            search = self.control_name.split("_")[1]
-            self.message = f"Using: {search} to find Controls"
-            objs_list = ([o for o in bpy.data.objects
-                if len(o.name.split("_")) == 2
-                and o.name.split("_")[1] == search
-                ])
-            for obj in objs_list:
-                tgt = bpy.data.objects[f"{obj.name}_{self.suffix}"]
-                if tgt is not None:
-                    rot_ang = (obj.location[self.axis_c] * self.factor) * pi / 180
-                    tgt.rotation_euler[self.axis_t] = (rot_ang + (self.offset * pi / 180))
 
 class CM_ND_PianoRollNode(bpy.types.Node):
     bl_idname = "cm_audio.piano_roll_node"

@@ -129,7 +129,7 @@ class CM_OT_ExecuteStartOperator(bpy.types.Operator):
         cm_node = context.node
         if "start_clock" not in bpy.app.handlers.frame_change_post:
             bpy.app.handlers.frame_change_post.append(start_clock)
-        view_lock()
+        #view_lock()
         return {"FINISHED"}
 
 

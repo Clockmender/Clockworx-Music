@@ -134,6 +134,7 @@ class CM_ND_AudioEchoNode(bpy.types.Node):
                 sound_out = sound_out.mix(snd)
         return sound_out.volume(self.volume)
 
+
 class CM_ND_AudioEnvelopeNode(bpy.types.Node):
     bl_idname = "cm_audio.envelope_node"
     bl_label = "Envelope"
