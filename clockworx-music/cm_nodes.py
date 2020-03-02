@@ -432,7 +432,8 @@ class CM_ND_AudioOutputNode(bpy.types.Node):
         self.inputs.new("cm_socket.sound", "Audio")
 
     def get_sound(self):
-        return connected_node_sound(self, 0)
+        sound = connected_node_sound(self, 0)
+        return sound
 
     def draw_buttons(self, context, layout):
         layout.context_pointer_set("audionode", self)
@@ -456,7 +457,8 @@ class CM_ND_AudioWriteNode(bpy.types.Node):
         self.inputs.new("cm_socket.sound", "Audio")
 
     def get_sound(self):
-        return connected_node_sound(self, 0)
+        sound = connected_node_sound(self, 0)
+        return sound
 
     def draw_buttons(self, context, layout):
         layout.context_pointer_set("audionode", self)

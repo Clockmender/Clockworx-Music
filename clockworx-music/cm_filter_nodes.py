@@ -28,6 +28,7 @@ from bpy.props import (
     FloatProperty,
     IntProperty,
     BoolProperty,
+    StringProperty,
 )
 from .cm_sockets import (
     CM_SK_AudioNodeSocket,
@@ -68,22 +69,21 @@ class CM_ND_AudioDelayNode(bpy.types.Node):
     bl_icon = "SPEAKER"
 
     time_prop : bpy.props.FloatProperty(name="Delay", default=0, min=0, soft_max=10)
-    type_bool : BoolProperty(name="Time/Beats", default=True)
 
     def init(self, context):
         self.inputs.new("cm_socket.sound", "Audio")
         self.outputs.new("cm_socket.sound", "Audio")
 
     def draw_buttons(self, context, layout):
+        cm_pg = context.scene.cm_pg
         layout.prop(self, "time_prop")
-        layout.prop(self, "type_bool")
 
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
         sound = connected_node_sound(self, 0)
         if sound == None:
             return None
-        if self.type_bool:
+        if cm.type_bool:
             self.time_prop
         else:
             delay = self.time_prop * (60 / cm.bpm)
@@ -98,7 +98,6 @@ class CM_ND_AudioEchoNode(bpy.types.Node):
     time_prop : bpy.props.FloatProperty(name="Delay", default=0, min=0, soft_max=10)
     echo_num : IntProperty(name="Echos #", default=4, min=1, max=10)
     factor : FloatProperty(name="Decay Factor", default=0.2, min=0.001, max=0.5)
-    type_bool : BoolProperty(name="Time/Beats", default=True)
     volume : FloatProperty(name="Volume", default=1, min=0.1)
 
     def init(self, context):
@@ -109,7 +108,6 @@ class CM_ND_AudioEchoNode(bpy.types.Node):
         layout.prop(self, "time_prop")
         layout.prop(self, "echo_num")
         layout.prop(self, "factor")
-        layout.prop(self, "type_bool")
         layout.prop(self, "volume")
 
     def get_sound(self):
@@ -121,7 +119,7 @@ class CM_ND_AudioEchoNode(bpy.types.Node):
         sound = sound.volume(volume)
         first = True
         for i in range(self.echo_num):
-            if self.type_bool:
+            if cm.type_bool:
                 delay = self.time_prop * (i + 1)
             else:
                 delay = (self.time_prop * (i + 1)) * (60 / cm.bpm)
@@ -168,36 +166,55 @@ class CM_ND_AudioFaderNode(bpy.types.Node):
     bl_label = "Fader by Time/Beats"
     bl_icon = "SPEAKER"
 
-    start_prop : bpy.props.FloatProperty(name="Start", default=0, soft_min=0)
-    length_prop : bpy.props.FloatProperty(name="Length", default=1, soft_min=0)
-    inverse_prop : bpy.props.BoolProperty(name="Invert", default=False)
-    type_bool : BoolProperty(name="Time/Beats", default=True)
+    start_prop : bpy.props.FloatProperty(name="Start In", default=0, soft_min=0)
+    length_prop : bpy.props.FloatProperty(name="Length In", default=1, soft_min=0)
+    starto_prop : bpy.props.FloatProperty(name="Start Out", default=0, soft_min=0)
+    lengtho_prop : bpy.props.FloatProperty(name="Length Out", default=1, soft_min=0)
+    fade_in_prop : bpy.props.BoolProperty(name="In", default=False)
+    fade_out_prop : bpy.props.BoolProperty(name="Out", default=False)
+    message : StringProperty(name="")
 
     def init(self, context):
         self.inputs.new("cm_socket.sound", "Audio")
         self.outputs.new("cm_socket.sound", "Audio")
 
     def draw_buttons(self, context, layout):
+        cm_pg = context.scene.cm_pg
         layout.prop(self, "start_prop")
         layout.prop(self, "length_prop")
-        layout.prop(self, "inverse_prop")
-        layout.prop(self, "type_bool")
+        layout.prop(self, "starto_prop")
+        layout.prop(self, "lengtho_prop")
+        row = layout.row()
+        row.prop(self, "fade_in_prop")
+        row.prop(self, "fade_out_prop")
+        layout.prop(self, "message")
 
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
         sound = connected_node_sound(self, 0)
-        if self.type_bool:
-            start = self.start_prop
-            length = self.length_prop
+        if cm.type_bool:
+            len = sound.length / sound.specs[0]
+            self.message = f"Length: {len} Secs"
         else:
-            start = self.start_prop * (60 / cm.bpm)
-            length = self.length_prop * (60 / cm.bpm)
+            len = (sound.length / sound.specs[0]) * (60 / cm.bpm)
+            self.message = f"Length: {len} Beats"
+        if cm.type_bool:
+            start_in = self.start_prop
+            length_in = self.length_prop
+            start_out = self.starto_prop
+            length_out = self.lengtho_prop
+        else:
+            start_in = self.start_prop * (60 / cm.bpm)
+            length_in = self.length_prop * (60 / cm.bpm)
+            start_out = self.starto_prop * (60 / cm.bpm)
+            length_out = self.lengtho_prop * (60 / cm.bpm)
         if sound == None:
             return None
-        if self.inverse_prop:
-            return sound.fadeout(start, length)
-        else:
-            return sound.fadein(start, length)
+        if self.fade_in_prop:
+            sound = sound.fadein(start_in, length_in)
+        if self.fade_out_prop:
+            sound = sound.fadeout(start_out, length_out)
+        return sound
 
 
 class CM_ND_AudioHighpassNode(bpy.types.Node):
@@ -231,29 +248,34 @@ class CM_ND_AudioLimitNode(bpy.types.Node):
 
     start_prop : bpy.props.FloatProperty(name="Start", default=0, soft_min=0)
     end_prop : bpy.props.FloatProperty(name="Length", default=1, soft_min=0)
-    type_bool : BoolProperty(name="Time/Beats", default=True)
+    message : StringProperty(name="")
 
     def init(self, context):
         self.inputs.new("cm_socket.sound", "Audio")
         self.outputs.new("cm_socket.sound", "Audio")
 
     def draw_buttons(self, context, layout):
+        cm_pg = context.scene.cm_pg
         layout.prop(self, "start_prop")
         layout.prop(self, "end_prop")
-        layout.prop(self, "type_bool")
+        layout.prop(self, "message")
 
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
         sound = connected_node_sound(self, 0)
-        if self.type_bool:
+        if cm.type_bool:
             start = self.start_prop
-            end = self.end_prop
+            length = self.start_prop + self.end_prop
+            len = sound.length / sound.specs[0]
+            self.message = f"Length: {len} Secs"
         else:
             start = self.start_prop * (60 / cm.bpm)
-            end = self.end_prop * (60 / cm.bpm)
+            length = self.end_prop * (60 / cm.bpm)
+            len = (sound.length / sound.specs[0]) * (60 / cm.bpm)
+            self.message = f"Length: {len} Beats"
         if sound == None or self.start_prop >= self.end_prop:
             return None
-        return sound.limit(self.start_prop, self.end_prop)
+        return sound.limit(start, length)
 
 
 class CM_ND_AudioLoopNode(bpy.types.Node):

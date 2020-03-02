@@ -44,7 +44,7 @@ class CM_ND_AudioMidiBakeNode(bpy.types.Node):
     squ_val : BoolProperty(name="Use Square Waveforms", default=True)
     midi_channel: IntProperty(name="Midi Channel", default=2, min=2)
     time_off : FloatProperty(name="Offset (B)", default=0,
-        description="Number of Beats offset from start of song")
+        description="Number of Beats offset from start of Song for Sound File")
     suffix : StringProperty(name="Obj Suffix", default="key")
     message1 : StringProperty()
     message2 : StringProperty()
@@ -118,18 +118,15 @@ class CM_OT_LoadSoundFile(bpy.types.Operator):
 
     def execute(self, context):
         cm_node = context.node
-        cm_node.use_custom_color = True
-        cm_node.useNetworkColor = False
-        cm_node.color = (0.5, 0.75, 1.0)
         cm = context.scene.cm_pg
         path = bpy.path.abspath(cm.sound_file_name)
         scene = context.scene
         if not scene.sequence_editor:
             scene.sequence_editor_create()
         soundstrip = scene.sequence_editor.sequences.new_sound(
-            "Sound", path, cm_node.sequence_channel, cm.offset,
+            "Sound", path, cm_node.sequence_channel, (cm_node.time_off + cm.offset),
         )
-        soundstrip.show_waveform
+        soundstrip.show_waveform = True
         return {"FINISHED"}
 
 def AnalyseMidiFile(context):
@@ -194,9 +191,6 @@ class CM_OT_CreateMIDIControls(bpy.types.Operator):
 
     def execute(self, context):
         cm_node = context.node
-        cm_node.use_custom_color = True
-        cm_node.useNetworkColor = False
-        cm_node.color = (0.5, 0.75, 1.0)
         cm = context.scene.cm_pg
         path = bpy.path.abspath(cm.midi_file_name)
         if ".csv" not in path:
@@ -301,9 +295,6 @@ class CM_OT_CreateMIDISound(bpy.types.Operator):
 
     def execute(self, context):
         cm_node = context.node
-        cm_node.use_custom_color = True
-        cm_node.useNetworkColor = False
-        cm_node.color = (0.5, 0.75, 1.0)
         cm = context.scene.cm_pg
         path = bpy.path.abspath(cm.midi_file_name)
         if ".csv" not in path:
@@ -357,6 +348,9 @@ class CM_OT_CreateMIDISound(bpy.types.Operator):
                     else:
                         sound = sound.mix(snd.delay(time_s))
             # Write File
+            if ".flac" not in cm_node.write_name:
+                cm_node.message1 = "No/Wrong Output File Specified must be .flac"
+                return {"FINISHED"}
             path = bpy.path.abspath(cm_node.write_name)
             my_file = Path(path)
             if my_file.is_file():

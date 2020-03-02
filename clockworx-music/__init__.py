@@ -26,6 +26,7 @@ bl_info = {
     "author": "Alan Odom (Clockmender)",
     "version": (0, 0, 1),
     "blender": (2, 80, 0),
+    "location": "Clockworx Node Tree > UI > PDT",
     "warning": "Don't do it, just don't even THINK of doing it!",
     "category": "Node",
 }
@@ -43,6 +44,7 @@ if "bpy" in locals():
     importlib.reload(cm_functions)
     importlib.reload(cm_midi_bake)
     importlib.reload(cm_objects)
+    importlib.reload(cm_menus)
 else:
     from . import cm_sockets
     from . import cm_nodes
@@ -51,6 +53,7 @@ else:
     from . import cm_functions
     from . import cm_midi_bake
     from . import cm_objects
+    from . import cm_menus
 
 
 import aud
@@ -63,12 +66,13 @@ from bpy.props import (
     FloatProperty,
     PointerProperty,
     StringProperty,
-    BoolProperty
+    BoolProperty,
+    EnumProperty,
 )
 
 
 class AudioNodeTree(bpy.types.NodeTree):
-    bl_description = "Audio Node Trees"
+    bl_description = "CM Audio Node Trees"
     bl_icon = "SOUND"
     bl_idname = "AudioNodeTree"
     bl_label = "Clockworx Music Editor"
@@ -90,7 +94,21 @@ class CMSceneProperties(PropertyGroup):
     bpm : IntProperty(name="BPM", default=60)
     time_sig_num : IntProperty(name="Time Sig N", default=4)
     time_sig_den : IntProperty(name="Time Sig D", default=4)
-    note_den : IntProperty(name="Note Denom.",min=1, default=16, max=64)
+    #note_den : IntProperty(name="Note Denom.",min=1, default=16, max=64)
+    note_den : EnumProperty(
+        items=(
+            ("1", "1", "1 Beat"),
+            ("2", "2", "1/2 Beat"),
+            ("4", "4", "1/4 Beat"),
+            ("8", "8", "1/8 Beat"),
+            ("16", "16", "1/16 Beat"),
+            ("32", "32", "1/32 Beat"),
+            ("64", "64", "1/64 Beat"),
+        ),
+        name="Note Denom",
+        default="16",
+        description="Note Denominator",
+    )
     time_note_min : FloatProperty(name="Time_Note_Min", default=0)
     duration_factor : FloatProperty(name="Duration_Factor", default=0)
     samples : IntProperty(name="Samples", default=44100, min=6000)
@@ -103,6 +121,8 @@ class CMSceneProperties(PropertyGroup):
     offset : IntProperty(name = "Offset - Anim Start Frame", default=1, min=-1000, max=10000)
     mid_c : BoolProperty(name = "Middle C = C4", default = True)
     channels : StringProperty()
+    message : StringProperty(name="")
+    type_bool : BoolProperty(name="Time (True) or Beats", default=True)
     data_dict = {}
     event_dict = {}
     time_dict = {}
@@ -145,7 +165,7 @@ class AudioObjectNodeCategory(NodeCategory):
 
 categories = [
         AudioIONodeCategory("AUDIO_SETUP_CATEGORY", "Setup", items = [
-        NodeItem("cm_audio.control_node"),
+        #NodeItem("cm_audio.control_node"),
         NodeItem("cm_audio.midi_bake_node"),
     ]),
         AudioIONodeCategory("AUDIO_PROP_CATEGORY", "Constants", items = [
@@ -199,6 +219,7 @@ categories = [
 classes = [
     CMSceneProperties,
     AudioNodeTree,
+    cm_menus.CM_PT_PanelDesign,
     cm_sockets.CM_SK_AudioNodeSocket,
     cm_sockets.CM_SK_FloatNodeSocket,
     cm_sockets.CM_SK_IntNodeSocket,
@@ -244,6 +265,7 @@ classes = [
     cm_operators.CM_OT_ExecuteStartOperator,
     cm_operators.CM_OT_ExecuteStopOperator,
     cm_operators.CM_OT_SetConstantsOperator,
+    cm_operators.CM_OT_SetConstantsMenu,
     cm_operators.CM_OT_StopAudioNodeOperator,
     cm_operators.CM_OT_WriteAudioNodeOperator,
     cm_midi_bake.CM_ND_AudioMidiBakeNode,

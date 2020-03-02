@@ -126,7 +126,6 @@ class CM_OT_ExecuteStartOperator(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         cm = scene.cm_pg
-        cm_node = context.node
         if "start_clock" not in bpy.app.handlers.frame_change_post:
             bpy.app.handlers.frame_change_post.append(start_clock)
         #view_lock()
@@ -144,7 +143,6 @@ class CM_OT_ExecuteStopOperator(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         cm = scene.cm_pg
-        cm_node = context.node
         if "start_clock" in bpy.app.handlers.frame_change_post:
             bpy.app.handlers.frame_change_post.remove(start_clock)
         return {"FINISHED"}
@@ -177,4 +175,25 @@ class CM_OT_SetConstantsOperator(bpy.types.Operator):
         else:
             cm_node.message = "Note Den must be 1,2,4,8,16,32 or 64"
         cm_node.message = "Parameters Set."
+        return {"FINISHED"}
+
+
+class CM_OT_SetConstantsMenu(bpy.types.Operator):
+    bl_idname = "cm_audio.set_constants_menu"
+    bl_label = "Setup Blend File Parameters"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        scene = context.scene
+        cm = scene.cm_pg
+        note_den = int(cm.note_den)
+        fps = int((cm.bpm / 60 * note_den) * 100)
+        bpy.context.scene.render.fps = fps
+        bpy.context.scene.render.fps_base = 100
+        cm.time_note_min = round((60 / cm.bpm) / note_den, 4)
+        cm.duration_factor = round(note_den * cm.bpm / 600, 4)
+        cm.message = "Parameters Set."
         return {"FINISHED"}

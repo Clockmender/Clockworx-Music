@@ -96,7 +96,7 @@ class CM_OT_GetSuffix(bpy.types.Operator):
         cm_node = context.node
         obj = context.view_layer.objects.active
         if obj is not None:
-            cm_node.suffix = obj.name.split("_")[2]
+            cm_node.suffix = obj.name.split("_")[1]
         return {"FINISHED"}
 
 
@@ -243,7 +243,8 @@ class CM_ND_ObjectLocNode(bpy.types.Node):
                 )
             for obj in objs_list:
                 vector_delta, euler_delta, scale_delta = off_set(obj)
-                tgt_obj = bpy.data.objects[f"{obj.name}_{self.suffix}"]
+                note_name = obj.name.split("_")[0]
+                tgt_obj = bpy.data.objects[f"{note_name}_{self.suffix}"]
                 if self.anim_type == "loc":
                     tgt_obj.delta_location = vector_delta
                 elif self.anim_type == "rot":
