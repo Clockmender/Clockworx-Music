@@ -100,17 +100,6 @@ class CM_OT_GetSuffix(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class CM_OT_UnlockView(bpy.types.Operator):
-    bl_idname = "cm_audio.unlock_view"
-    bl_label = "Unlock"
-
-    def execute(self, context):
-        for area in bpy.context.screen.areas:
-            if area.type == 'VIEW_3D':
-                area.spaces[0].region_3d.lock_rotation = False
-        return {"FINISHED"}
-
-
 class CM_OT_EvaluatePiano(bpy.types.Operator):
     bl_idname = "cm_audio.evaluate_piano"
     bl_label = "Play & Write Notes to Pointer"

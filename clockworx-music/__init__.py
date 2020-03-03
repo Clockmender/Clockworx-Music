@@ -74,7 +74,7 @@ from bpy.props import (
 class AudioNodeTree(bpy.types.NodeTree):
     bl_description = "CM Audio Node Trees"
     bl_icon = "SOUND"
-    bl_idname = "AudioNodeTree"
+    bl_idname = "cm_AudioNodeTree"
     bl_label = "Clockworx Music Editor"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -124,6 +124,11 @@ class CMSceneProperties(PropertyGroup):
     data_dict = {}
     event_dict = {}
     time_dict = {}
+    message1 : StringProperty(name="")
+    col_name : StringProperty(name="Collection", default="")
+    suffix_obj : StringProperty(name="Suffix", default="key")
+    bridge_len : FloatProperty(name = "Bridge Length", min=0.5,max=1.0)
+    scale_f : FloatProperty(name = "Scale Factor", min=0.5, max=1)
 
 
 class AudioSetupNodeCategory(NodeCategory):
@@ -135,30 +140,30 @@ class AudioSetupNodeCategory(NodeCategory):
 class AudioPropertiesNodeCategory(NodeCategory):
     @classmethod
     def poll(cls, context):
-        return context.space_data.tree_type == "AudioNodeTree"
+        return context.space_data.tree_type == "cm_AudioNodeTree"
 
 
 class AudioIONodeCategory(NodeCategory):
     @classmethod
     def poll(cls, context):
-        return context.space_data.tree_type == "AudioNodeTree"
+        return context.space_data.tree_type == "cm_AudioNodeTree"
 
 
 class AudioFilterNodeCategory(NodeCategory):
     @classmethod
     def poll(cls, context):
-        return context.space_data.tree_type == "AudioNodeTree"
+        return context.space_data.tree_type == "cm_AudioNodeTree"
 
 
 class AudioSequenceNodeCategory(NodeCategory):
     @classmethod
     def poll(cls, context):
-        return context.space_data.tree_type == "AudioNodeTree"
+        return context.space_data.tree_type == "cm_AudioNodeTree"
 
 class AudioObjectNodeCategory(NodeCategory):
     @classmethod
     def poll(cls, context):
-        return context.space_data.tree_type == "AudioNodeTree"
+        return context.space_data.tree_type == "cm_AudioNodeTree"
 
 
 categories = [
@@ -166,13 +171,14 @@ categories = [
         #NodeItem("cm_audio.control_node"),
         NodeItem("cm_audio.midi_bake_node"),
     ]),
-        AudioIONodeCategory("AUDIO_PROP_CATEGORY", "Constants", items = [
+        AudioIONodeCategory("AUDIO_PROP_CATEGORY", "Constants/Info", items = [
         NodeItem("cm_audio.text_node"),
         NodeItem("cm_audio.float_node"),
         NodeItem("cm_audio.int_node"),
         NodeItem("cm_audio.bool_node"),
         NodeItem("cm_audio.debug_node"),
         NodeItem("cm_audio.info_node"),
+        NodeItem("cm_audio.sound_info_node"),
         NodeItem("cm_audio.frame_node"),
         NodeItem("cm_audio.time_node"),
         NodeItem("cm_audio.beats_node"),
@@ -197,6 +203,8 @@ categories = [
         NodeItem("cm_audio.lowpass_node"),
         NodeItem("cm_audio.modulate_node"),
         NodeItem("cm_audio.pitch_node"),
+        NodeItem("cm_audio.resample_node"),
+        NodeItem("cm_audio.reverse_node"),
         NodeItem("cm_audio.volume_node"),
     ]),
     AudioSequenceNodeCategory("AUDIO_SEQUENCE_CATEGORY", "Sequence", items = [
@@ -205,7 +213,6 @@ categories = [
         NodeItem("cm_audio.loop_node"),
         NodeItem("cm_audio.mix_node"),
         NodeItem("cm_audio.pingpong_node"),
-        NodeItem("cm_audio.reverse_node"),
         NodeItem("cm_audio.slicer_node"),
     ]),
         AudioSequenceNodeCategory("AUDIO_OBJECT_CATEGORY", "Objects", items = [
@@ -218,6 +225,7 @@ classes = [
     CMSceneProperties,
     AudioNodeTree,
     cm_menus.CM_PT_PanelDesign,
+    cm_menus.CM_PT_PanelView,
     cm_sockets.CM_SK_AudioNodeSocket,
     cm_sockets.CM_SK_FloatNodeSocket,
     cm_sockets.CM_SK_IntNodeSocket,
@@ -232,6 +240,7 @@ classes = [
     cm_nodes.CM_ND_AudioTimeNode,
     cm_nodes.CM_ND_AudioBeatsNode,
     cm_nodes.CM_ND_AudioInfoNode,
+    cm_nodes.CM_ND_SoundInfoNode,
     cm_nodes.CM_ND_AudioDebugNode,
     cm_nodes.CM_ND_AudioSoundNode,
     cm_nodes.CM_ND_AudioChordNode,
@@ -257,6 +266,7 @@ classes = [
     cm_filter_nodes.CM_ND_AudioModulateNode,
     cm_filter_nodes.CM_ND_AudioPingPongNode,
     cm_filter_nodes.CM_ND_AudioReverseNode,
+    cm_filter_nodes.CM_ND_AudioResampleNode,
     cm_filter_nodes.CM_ND_AudioSlicerNode,
     cm_operators.CM_OT_PlayAudioNodeOperator,
     cm_operators.CM_OT_DisplayAudioNodeOperator,
@@ -266,6 +276,12 @@ classes = [
     cm_operators.CM_OT_SetConstantsMenu,
     cm_operators.CM_OT_StopAudioNodeOperator,
     cm_operators.CM_OT_WriteAudioNodeOperator,
+    cm_operators.CM_OT_impKeyb88,
+    cm_operators.CM_OT_impKeyb61,
+    cm_operators.CM_OT_impFrets,
+    cm_operators.CM_OT_renMesh,
+    cm_operators.CM_OT_UnlockView,
+    cm_operators.CM_OT_lockView,
     cm_midi_bake.CM_ND_AudioMidiBakeNode,
     cm_midi_bake.CM_OT_LoadSoundFile,
     cm_midi_bake.CM_OT_CreateMIDIControls,
@@ -274,7 +290,6 @@ classes = [
     cm_objects.CM_ND_PianoRollNode,
     cm_objects.CM_OT_EvaluatePiano,
     cm_objects.CM_OT_EvaluateNotes,
-    cm_objects.CM_OT_UnlockView,
     cm_objects.CM_OT_GetName,
     cm_objects.CM_OT_GetSuffix,
     cm_objects.CM_OT_GetTarget,

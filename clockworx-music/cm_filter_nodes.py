@@ -187,17 +187,10 @@ class CM_ND_AudioFaderNode(bpy.types.Node):
         row = layout.row()
         row.prop(self, "fade_in_prop")
         row.prop(self, "fade_out_prop")
-        layout.prop(self, "message")
 
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
         sound = connected_node_sound(self, 0)
-        if cm.type_bool:
-            len = sound.length / sound.specs[0]
-            self.message = f"Length: {len} Secs"
-        else:
-            len = (sound.length / sound.specs[0]) * (60 / cm.bpm)
-            self.message = f"Length: {len} Beats"
         if cm.type_bool:
             start_in = self.start_prop
             length_in = self.length_prop
@@ -258,7 +251,6 @@ class CM_ND_AudioLimitNode(bpy.types.Node):
         cm_pg = context.scene.cm_pg
         layout.prop(self, "start_prop")
         layout.prop(self, "end_prop")
-        layout.prop(self, "message")
 
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
@@ -266,13 +258,9 @@ class CM_ND_AudioLimitNode(bpy.types.Node):
         if cm.type_bool:
             start = self.start_prop
             length = self.start_prop + self.end_prop
-            len = sound.length / sound.specs[0]
-            self.message = f"Length: {len} Secs"
         else:
             start = self.start_prop * (60 / cm.bpm)
             length = self.end_prop * (60 / cm.bpm)
-            len = (sound.length / sound.specs[0]) * (60 / cm.bpm)
-            self.message = f"Length: {len} Beats"
         if sound == None or self.start_prop >= self.end_prop:
             return None
         return sound.limit(start, length)
@@ -479,6 +467,29 @@ class CM_ND_AudioReverseNode(bpy.types.Node):
         if sound == None:
           return None
         return sound.reverse()
+
+
+class CM_ND_AudioResampleNode(bpy.types.Node):
+    bl_idname = "cm_audio.resample_node"
+    bl_label = "Resample To System"
+    bl_icon = "SPEAKER"
+
+    qual_bool : BoolProperty(name="H/L Quality", default=False)
+
+    def init(self, context):
+        self.inputs.new("cm_socket.sound", "Audio")
+        self.outputs.new("cm_socket.sound", "Audio")
+
+    def draw_buttons(self, context, layout):
+        row = layout.row()
+        row.prop(self, "qual_bool")
+
+    def get_sound(self):
+        cm = bpy.context.scene.cm_pg
+        sound = connected_node_sound(self, 0)
+        if sound == None:
+          return None
+        return sound.resample(cm.samples, self.qual_bool)
 
 
 class CM_ND_AudioSlicerNode(bpy.types.Node):

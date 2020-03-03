@@ -41,7 +41,7 @@ def connected_node(node, socket):
 
 def view_lock():
     for area in bpy.context.screen.areas:
-        if area.type == 'VIEW_3D_Clock':
+        if area.type == 'VIEW_3D':
             area.spaces[0].region_3d.view_rotation = Quaternion((1, 0, 0, 0))
             area.spaces[0].region_3d.lock_rotation = True
             view_distance = area.spaces[0].region_3d.view_distance
