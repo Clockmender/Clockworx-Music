@@ -42,6 +42,7 @@ class CM_PT_PanelDesign(Panel):
 
     @classmethod
     def poll(cls, context):
+        context.area.type == "NODE_EDITOR"
         return True #name == "Clockworx Music Editor"
 
     def draw(self, context):

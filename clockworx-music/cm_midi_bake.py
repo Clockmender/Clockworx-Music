@@ -61,6 +61,8 @@ class CM_ND_AudioMidiBakeNode(bpy.types.Node):
         default="sine",
         description="Waveform for Sound",
     )
+    midi_file_name : StringProperty(subtype="FILE_PATH", name="Midi CSV file", default="//")
+    sound_file_name : StringProperty(subtype="FILE_PATH", name="Sound file", default="//")
     write_name : StringProperty(subtype="FILE_PATH", name="Ouptut File Name", default="//")
     sequence_channel : IntProperty(name="Channel", default=1, description="VSE Channel")
     add_file : BoolProperty(name="Add to VSE", default=False)
@@ -76,9 +78,9 @@ class CM_ND_AudioMidiBakeNode(bpy.types.Node):
         row.prop(self, "use_vel")
         row.prop(self, "squ_val")
 
-        layout.prop(cm_pg, "midi_file_name")
+        layout.prop(self, "midi_file_name")
         layout.prop(self, "write_name")
-        layout.prop(cm_pg, "sound_file_name")
+        layout.prop(self, "sound_file_name")
         layout.prop(self, "suffix")
         layout.prop(self, "gen_type")
         row = layout.row()
@@ -114,12 +116,13 @@ class CM_OT_LoadSoundFile(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return True
+        cm_node = context.node
+        return cm_node.sound_file_name != "" and cm_node.sound_file_name != "//"
 
     def execute(self, context):
         cm_node = context.node
         cm = context.scene.cm_pg
-        path = bpy.path.abspath(cm.sound_file_name)
+        path = bpy.path.abspath(cm_node.sound_file_name)
         scene = context.scene
         if not scene.sequence_editor:
             scene.sequence_editor_create()
@@ -132,11 +135,11 @@ class CM_OT_LoadSoundFile(bpy.types.Operator):
 def AnalyseMidiFile(context):
     cm_node = context.node
     cm = context.scene.cm_pg
-    cm_node.message1 = "Midi File Analysed: " + str(os.path.basename(cm.midi_file_name))
+    cm_node.message1 = "Midi File Analysed: " + str(os.path.basename(cm_node.midi_file_name))
     cm_node.message2 = "Check/Load Sound File, Use Velocity, Easing & Offset"
     fps = bpy.context.scene.render.fps / bpy.context.scene.render.fps_base
     cm.data_dict.clear()
-    path = bpy.path.abspath(cm.midi_file_name)
+    path = bpy.path.abspath(cm_node.midi_file_name)
     if ".csv" not in path:
         cm_node.message1 = "No CSV File specified"
         return
@@ -187,12 +190,13 @@ class CM_OT_CreateMIDIControls(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return True
+        cm_node = context.node
+        return ".csv" in cm_node.midi_file_name
 
     def execute(self, context):
         cm_node = context.node
         cm = context.scene.cm_pg
-        path = bpy.path.abspath(cm.midi_file_name)
+        path = bpy.path.abspath(cm_node.midi_file_name)
         if ".csv" not in path:
             cm_node.message1 = "No MIDI file Specified"
             cm_node.message2 = ""
@@ -291,12 +295,13 @@ class CM_OT_CreateMIDISound(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return True
+        cm_node = context.node
+        return ".csv" in cm_node.midi_file_name and ".flac" in cm_node.write_name
 
     def execute(self, context):
         cm_node = context.node
         cm = context.scene.cm_pg
-        path = bpy.path.abspath(cm.midi_file_name)
+        path = bpy.path.abspath(cm_node.midi_file_name)
         if ".csv" not in path:
             cm_node.message1 = "No MIDI file Specified"
             cm_node.message2 = ""

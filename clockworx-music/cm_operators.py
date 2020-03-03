@@ -65,7 +65,8 @@ class CM_OT_WriteAudioNodeOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return True
+        cm_node = context.node
+        return ".flac" in cm_node.write_name
 
     def execute(self, context):
         cm_node = context.node
@@ -121,12 +122,12 @@ class CM_OT_ExecuteStartOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return True
+        return start_clock not in bpy.app.handlers.frame_change_post
 
     def execute(self, context):
         scene = context.scene
         cm = scene.cm_pg
-        if "start_clock" not in bpy.app.handlers.frame_change_post:
+        if start_clock not in bpy.app.handlers.frame_change_post:
             bpy.app.handlers.frame_change_post.append(start_clock)
         #view_lock()
         return {"FINISHED"}
@@ -138,12 +139,12 @@ class CM_OT_ExecuteStopOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return True
+        return start_clock in bpy.app.handlers.frame_change_post
 
     def execute(self, context):
         scene = context.scene
         cm = scene.cm_pg
-        if "start_clock" in bpy.app.handlers.frame_change_post:
+        if start_clock in bpy.app.handlers.frame_change_post:
             bpy.app.handlers.frame_change_post.remove(start_clock)
         return {"FINISHED"}
 
