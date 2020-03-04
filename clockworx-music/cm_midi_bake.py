@@ -37,7 +37,7 @@ from .cm_functions import get_note, get_freq, osc_generate
 
 class CM_ND_AudioMidiBakeNode(bpy.types.Node):
     bl_idname = "cm_audio.midi_bake_node"
-    bl_label = "CM MIDI Bake"
+    bl_label = "Clockworx MIDI Bake"
     bl_icon = "SPEAKER"
 
     use_vel : BoolProperty(name="Use MIDI Velocity", default=False)
@@ -67,6 +67,7 @@ class CM_ND_AudioMidiBakeNode(bpy.types.Node):
     sequence_channel : IntProperty(name="Channel", default=1, description="VSE Channel")
     add_file : BoolProperty(name="Add to VSE", default=False)
     strip_name : StringProperty(name="Strip Name", default="")
+    volume : FloatProperty(name="Volume", default=1.0)
 
     def draw_buttons(self, context, layout):
         cm_pg = context.scene.cm_pg
@@ -89,6 +90,10 @@ class CM_ND_AudioMidiBakeNode(bpy.types.Node):
         row = layout.row()
         row.prop(self, "time_off")
         row.prop(self, "sequence_channel")
+        row = layout.row()
+        split = row.split(factor=0.50, align=True)
+        split.label(text="")
+        split.prop(self, "volume")
         row = layout.row()
         split = row.split(factor=0.30, align=True)
         split.label(text="")
@@ -172,7 +177,7 @@ def AnalyseMidiFile(context):
                     tName = in_l[3].strip('"')
                     cm.data_dict["Track Name"] = tName
                 otName = in_l[3].strip('"')
-                if "Tracks" not in dataD.keys():
+                if "Tracks" not in cm.data_dict.keys():
                     cm.data_dict["Tracks"] = [[otName, int(in_l[0])]]
                     cm.channels = in_l[0] + " - " + otName
                 else:
@@ -181,6 +186,65 @@ def AnalyseMidiFile(context):
 
     cm_node.message2 = "Midi CSV File Analysed and Data Dictionary Built"
     return
+
+
+class CM_ND_AnalyseMidiNode(bpy.types.Node):
+    bl_idname = "cm_audio.analyse_midi_node"
+    bl_label = "Clockworx MIDI Analyser"
+    bl_icon = "SPEAKER"
+
+    midi_file_name : StringProperty(subtype="FILE_PATH", name="Midi CSV file", default="//")
+    midi_channel: IntProperty(name="Midi Channel", default=2, min=2)
+    bpm : IntProperty(name="BPM", default=0)
+    tempo : IntProperty(name="1st Tempo", default=0)
+    pulse : IntProperty(name="Pulse", default=0)
+    time_sig : StringProperty(name="Time Sig", default="")
+    track_name : StringProperty(name="Track Name", default="")
+    tracks : StringProperty(name="Tracks", default="")
+
+    def draw_buttons(self, context, layout):
+        cm_pg = context.scene.cm_pg
+        layout.context_pointer_set("audionode", self)
+        layout.prop(self, "midi_file_name")
+        layout.prop(self, "midi_channel")
+        layout.prop(self, "bpm")
+        layout.prop(self, "pulse")
+        layout.prop(self, "tempo")
+        layout.prop(self, "time_sig")
+        layout.prop(self, "track_name")
+        layout.prop(self, "tracks")
+        layout.operator("cm_audio.analyse_midi", text="Analyse File")
+
+
+class CM_OT_AnalyseMidiFile(bpy.types.Operator):
+    bl_idname = "cm_audio.analyse_midi"
+    bl_label = "Analyse Midi File"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        cm_node = context.node
+        return ".csv" in cm_node.midi_file_name
+
+    def execute(self, context):
+        cm_node = context.node
+        cm = context.scene.cm_pg
+        path = bpy.path.abspath(cm_node.midi_file_name)
+        AnalyseMidiFile(context)
+        print(cm.data_dict)
+        cm_node.pulse = cm.data_dict["Pulse"]
+        cm_node.bpm = cm.data_dict["BPM"]
+        cm_node.tempo = int(cm.data_dict["Tempo"][0][1])
+        cm_node.time_sig = f"{cm.data_dict['TimeSig'][0]}:{cm.data_dict['TimeSig'][0]}"
+        cm_node.track_name = cm.data_dict['Track Name']
+        first = True
+        for v in range(len(cm.data_dict['Tracks'])):
+            if first:
+                cm_node.tracks = cm.data_dict['Tracks'][v][0]
+                first = False
+            else:
+                cm_node.tracks = cm_node.tracks + ", " + cm.data_dict['Tracks'][v][0]
+        return {"FINISHED"}
 
 
 class CM_OT_CreateMIDIControls(bpy.types.Operator):
@@ -197,10 +261,6 @@ class CM_OT_CreateMIDIControls(bpy.types.Operator):
         cm_node = context.node
         cm = context.scene.cm_pg
         path = bpy.path.abspath(cm_node.midi_file_name)
-        if ".csv" not in path:
-            cm_node.message1 = "No MIDI file Specified"
-            cm_node.message2 = ""
-            return {"FINISHED"}
         AnalyseMidiFile(context)
         cm.event_dict.clear()
         fps = bpy.context.scene.render.fps / bpy.context.scene.render.fps_base
@@ -299,13 +359,10 @@ class CM_OT_CreateMIDISound(bpy.types.Operator):
         return ".csv" in cm_node.midi_file_name and ".flac" in cm_node.write_name
 
     def execute(self, context):
+        # FIXME: Problems with mulit-notes!
         cm_node = context.node
         cm = context.scene.cm_pg
         path = bpy.path.abspath(cm_node.midi_file_name)
-        if ".csv" not in path:
-            cm_node.message1 = "No MIDI file Specified"
-            cm_node.message2 = ""
-            return {"FINISHED"}
         AnalyseMidiFile(context)
         cm.time_dict.clear()
 
@@ -347,6 +404,7 @@ class CM_OT_CreateMIDISound(bpy.types.Operator):
                     volume = values[i][1]
                     snd = osc_generate([0,k], cm_node.gen_type, cm.samples)
                     snd = snd.limit(0, time_f - time_s).rechannel(cm.sound_channels)
+                    snd = snd.volume(cm_node.volume)
                     if first:
                         sound = snd
                         first = False

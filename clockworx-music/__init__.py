@@ -169,6 +169,7 @@ class AudioObjectNodeCategory(NodeCategory):
 categories = [
         AudioIONodeCategory("AUDIO_SETUP_CATEGORY", "Setup", items = [
         #NodeItem("cm_audio.control_node"),
+        NodeItem("cm_audio.analyse_midi_node"),
         NodeItem("cm_audio.midi_bake_node"),
     ]),
         AudioIONodeCategory("AUDIO_PROP_CATEGORY", "Constants/Info", items = [
@@ -286,6 +287,8 @@ classes = [
     cm_midi_bake.CM_OT_LoadSoundFile,
     cm_midi_bake.CM_OT_CreateMIDIControls,
     cm_midi_bake.CM_OT_CreateMIDISound,
+    cm_midi_bake.CM_ND_AnalyseMidiNode,
+    cm_midi_bake.CM_OT_AnalyseMidiFile,
     cm_objects.CM_ND_ObjectLocNode,
     cm_objects.CM_ND_PianoRollNode,
     cm_objects.CM_OT_EvaluatePiano,

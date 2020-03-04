@@ -204,10 +204,12 @@ class CM_OT_impKeyb88(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self,context):
+        scene = context.scene
+        cm = scene.cm_pg
         path = (str(bpy.utils.user_resource('SCRIPTS', "addons"))
             + '/clockworx-music/imports/88keys.dae')
         bpy.ops.wm.collada_import(filepath=path)
-        cm_pg.message1 = "Import 88 Key Board Completed"
+        cm.message1 = "Import 88 Key Board Completed"
         return {"FINISHED"}
 
 
@@ -217,6 +219,8 @@ class CM_OT_impKeyb61(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self,context):
+        scene = context.scene
+        cm = scene.cm_pg
         path = (str(bpy.utils.user_resource('SCRIPTS', "addons"))
             + '/clockworx-music/imports/61keys.dae')
         bpy.ops.wm.collada_import(filepath=path)

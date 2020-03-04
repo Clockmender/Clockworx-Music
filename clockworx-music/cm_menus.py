@@ -42,13 +42,14 @@ class CM_PT_PanelDesign(Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.space_data.tree_type == "cm_AudioNodeTree"
+        return (context.space_data.tree_type == "cm_AudioNodeTree" and
+            context.area.type == "NODE_EDITOR")
 
     def draw(self, context):
         layout = self.layout
         cm_pg = context.scene.cm_pg
         box = layout.box()
-        box.label(text="Execution")
+        box.label(text="Execution on Frame Change")
         row = box.row()
         row.operator("cm_audio.execute_start", text="Start", icon="PLAY")
         row.operator("cm_audio.execute_stop", text="Stop", icon="SNAP_FACE")

@@ -173,6 +173,7 @@ class CM_ND_SoundInfoNode(bpy.types.Node):
 
     def init(self, context):
         self.inputs.new("cm_socket.sound", "Audio")
+        self.outputs.new("cm_socket.sound", "Audio")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "length")
@@ -190,7 +191,10 @@ class CM_ND_SoundInfoNode(bpy.types.Node):
         self.samples = specs[0]
         self.length = length / specs[0]
         if not cm.type_bool:
-            self.length = length * (60 / specs[0])
+            self.length = self.length * (60 / cm.bpm)
+
+    def get_sound(self):
+        return connected_node_sound(self, 0)
 
 
 class CM_ND_AudioFloatNode(bpy.types.Node):
@@ -204,7 +208,7 @@ class CM_ND_AudioFloatNode(bpy.types.Node):
         self.outputs.new("cm_socket.float", "Float")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "float_num")
+        layout.prop(self, "float_num", text="")
 
     def get_sound(self):
         return self.float_num
@@ -221,7 +225,7 @@ class CM_ND_AudioIntNode(bpy.types.Node):
         self.outputs.new("cm_socket.int", "Integer")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "int_num")
+        layout.prop(self, "int_num", text="")
 
     def get_sound(self):
         return self.int_num
@@ -238,7 +242,7 @@ class CM_ND_AudioTextNode(bpy.types.Node):
         self.outputs.new("cm_socket.text", "Text")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "text_input")
+        layout.prop(self, "text_input", text="")
 
     def get_sound(self):
         return self.text_input
@@ -255,7 +259,7 @@ class CM_ND_AudioBoolNode(bpy.types.Node):
         self.outputs.new("cm_socket.bool", "Boolean")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "bool_input")
+        layout.prop(self, "bool_input", text="")
 
     def get_sound(self):
         return self.bool_input
@@ -298,21 +302,31 @@ class CM_ND_AudioSoundNode(bpy.types.Node):
         cm = bpy.context.scene.cm_pg
         sockets = self.inputs.keys()
         input_values = get_socket_values(self, sockets, self.inputs)
-        index = get_index(input_values[0])
-        if index in range(0, 107):
-            input_values[1] = get_freq(index)
-        else:
-            input_values[1] = 16.35160
-
-        sound = osc_generate(input_values, self.gen_type, cm.samples)
-        sound = sound.volume(input_values[2])
-        bps = cm.bpm / 60
-        sound = sound.limit(0, (input_values[4] / bps))
-        sound = sound.delay(input_values[3] / bps)
-        sound = sound.rechannel(cm.sound_channels)
-        if input_values[5]:
-            sound = sound.reverse()
-        return sound
+        input_values[0] = input_values[0].split(",")
+        # notes are now a list
+        first = True
+        for i in range(len(input_values[0])):
+            index = get_index(input_values[0][i])
+            if index in range(0, 107):
+                freq = get_freq(index)
+            else:
+                freq = 0
+            if freq > 0:
+                input_values[1] = freq
+            sound = osc_generate(input_values, self.gen_type, cm.samples)
+            sound = sound.volume(input_values[2])
+            bps = cm.bpm / 60
+            sound = sound.limit(0, (input_values[4] / bps))
+            sound = sound.delay(input_values[3] / bps)
+            sound = sound.rechannel(cm.sound_channels)
+            if input_values[5]:
+                sound = sound.reverse()
+            if first:
+                sound_out = sound
+                first = False
+            else:
+                sound_out = sound_out.join(sound)
+        return sound_out
 
 class CM_ND_AudioChordNode(bpy.types.Node):
     bl_idname = "cm_audio.chord_node"
