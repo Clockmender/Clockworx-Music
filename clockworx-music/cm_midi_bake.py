@@ -367,6 +367,7 @@ class CM_OT_CreateMIDISound(bpy.types.Operator):
         cm.time_dict.clear()
 
         with open(path) as f1:
+            count = 0
             for line in f1:
                 in_l = [elt.strip() for elt in line.split(",")]
                 if (
@@ -389,24 +390,25 @@ class CM_OT_CreateMIDISound(bpy.types.Operator):
                         * 60
                         / (cm.data_dict.get("BPM") * cm.data_dict.get("Pulse"))
                     )
-
                     if noteFreq not in cm.time_dict.keys():
                         cm.time_dict[noteFreq] = [[time, onOff]]
                     else:
                         cm.time_dict[noteFreq].append([time, onOff])
             # Make Sounds.
             first = True
+            #count = 0
             for k in cm.time_dict.keys():
                 values = cm.time_dict.get(k)
                 for i in range(int(len(values)/2)):
-                    time_s = values[i][0]
-                    time_f = values[i + 1][0]
-                    volume = values[i][1]
+                    r = i * 2
+                    time_s = values[r][0]
+                    time_f = values[r + 1][0]
+                    volume = values[r][1]
                     snd = osc_generate([0,k], cm_node.gen_type, cm.samples)
                     snd = snd.limit(0, time_f - time_s).rechannel(cm.sound_channels)
                     snd = snd.volume(cm_node.volume)
                     if first:
-                        sound = snd
+                        sound = snd.delay(time_s)
                         first = False
                     else:
                         sound = sound.mix(snd.delay(time_s))
