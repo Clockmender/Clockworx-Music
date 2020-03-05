@@ -25,3 +25,17 @@ Download the Repo.
 Zip up the **Clockworx-Music** folder.
 
 Install like any other Blender Add-on from User Preferences.
+
+## Pygame & Sounddevice
+
+At some stage these will be required for Live MIDI & Sound connections.
+
+You should make sure pip is installed by navigating to the blender python/bin directory then:
+
+./python3.7m - m ensurepip
+
+Then install the libraries (I think Windows might be python3.7m.exe)
+
+./python3.7m -m pip install sounddevice
+
+./python3.7m -m pip install pygame
