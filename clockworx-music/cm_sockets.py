@@ -44,6 +44,7 @@ class CM_SK_AudioNodeSocket(bpy.types.NodeSocket):
 class CM_SK_FloatNodeSocket(bpy.types.NodeSocket):
     bl_idname = "cm_socket.float"
     bl_label = "Float Socket"
+    type = "VALUE"
 
     def prop_update(self, context):
         self.id_data.update()
@@ -63,6 +64,7 @@ class CM_SK_FloatNodeSocket(bpy.types.NodeSocket):
 class CM_SK_IntNodeSocket(bpy.types.NodeSocket):
     bl_idname = "cm_socket.int"
     bl_label = "Integer Socket"
+    type = "INT"
 
     def prop_update(self, context):
         self.id_data.update()
@@ -82,8 +84,7 @@ class CM_SK_IntNodeSocket(bpy.types.NodeSocket):
 class CM_SK_BoolNodeSocket(bpy.types.NodeSocket):
     bl_idname = "cm_socket.bool"
     bl_label = "Boolean Node Socket"
-    dataType = "Boolean"
-    allowedInputTypes = ["Boolean"]
+    type = "BOOLEAN"
 
     def prop_update(self, context):
         self.id_data.update()
@@ -102,6 +103,7 @@ class CM_SK_BoolNodeSocket(bpy.types.NodeSocket):
 class CM_SK_TextNodeSocket(bpy.types.NodeSocket):
     bl_idname = "cm_socket.text"
     bl_label = "Text Socket"
+    type = "STRING"
 
     def prop_update(self, context):
         self.id_data.update()
@@ -121,6 +123,28 @@ class CM_SK_TextNodeSocket(bpy.types.NodeSocket):
 class CM_SK_GenericNodeSocket(bpy.types.NodeSocket):
     bl_idname = "cm_socket.generic"
     bl_label = "Generic Socket"
+    type = "VALUE"
+
+    def prop_update(self, context):
+        self.id_data.update()
+
+    value: bpy.props.StringProperty(default = "", update=prop_update)
+
+    def draw(self, context, layout, node, text):
+        if self.is_output or self.is_linked:
+            layout.label(text=text)
+        else:
+            layout.prop(self, "value", text=text)
+
+    def draw_color(self, context, node):
+        return (0.6, 0.3, 0.3, 1.0)
+
+
+class CM_SK_GenericOutNodeSocket(bpy.types.NodeSocket):
+    bl_idname = "cm_socket.generic_out"
+    bl_label = "Generic Output Socket"
+    type = "VALUE"
+    is_output = True
 
     def prop_update(self, context):
         self.id_data.update()

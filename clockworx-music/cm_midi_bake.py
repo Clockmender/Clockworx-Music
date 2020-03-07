@@ -32,7 +32,12 @@ from bpy.props import (
     BoolProperty,
     EnumProperty,
     )
-from .cm_functions import get_note, get_freq, osc_generate
+from .cm_functions import (
+    get_note,
+    get_freq,
+    osc_generate,
+    analyse_midi_file,
+    )
 
 
 class CM_ND_AudioMidiBakeNode(bpy.types.Node):
@@ -68,6 +73,8 @@ class CM_ND_AudioMidiBakeNode(bpy.types.Node):
     add_file : BoolProperty(name="Add to VSE", default=False)
     strip_name : StringProperty(name="Strip Name", default="")
     volume : FloatProperty(name="Volume", default=1.0)
+    make_all : BoolProperty(name="All Channels", default=False)
+    label_cont : BoolProperty(name="Label Controls", default=False)
 
     def draw_buttons(self, context, layout):
         cm_pg = context.scene.cm_pg
@@ -82,7 +89,10 @@ class CM_ND_AudioMidiBakeNode(bpy.types.Node):
         layout.prop(self, "midi_file_name")
         layout.prop(self, "write_name")
         layout.prop(self, "sound_file_name")
-        layout.prop(self, "suffix")
+        row = layout.row()
+        row.prop(self, "label_cont")
+        row.label(text="Control Suffix:")
+        row.prop(self, "suffix", text="")
         layout.prop(self, "gen_type")
         row = layout.row()
         row.prop(self, "add_file")
@@ -94,16 +104,17 @@ class CM_ND_AudioMidiBakeNode(bpy.types.Node):
         split = row.split(factor=0.50, align=True)
         split.label(text="")
         split.prop(self, "volume")
+        layout.separator()
         row = layout.row()
-        split = row.split(factor=0.30, align=True)
-        split.label(text="")
+        split = row.split(factor=0.3, align=True)
+        split.prop(self, "make_all")
         split.operator("cm_audio.create_midi", icon="SOUND")
         row = layout.row()
-        split = row.split(factor=0.30, align=True)
+        split = row.split(factor=0.3, align=True)
         split.label(text="")
         split.operator("cm_audio.create_sound", icon="SPEAKER")
         row = layout.row()
-        split = row.split(factor=0.30, align=True)
+        split = row.split(factor=0.3, align=True)
         split.label(text="")
         split.operator("cm_audio.load_sound", icon="FILE_NEW")
 
@@ -129,63 +140,16 @@ class CM_OT_LoadSoundFile(bpy.types.Operator):
         cm = context.scene.cm_pg
         path = bpy.path.abspath(cm_node.sound_file_name)
         scene = context.scene
+        offset = cm_node.time_off
+        if not cm.type_bool:
+            offset = offset * (60 / cm.bpm)
         if not scene.sequence_editor:
             scene.sequence_editor_create()
         soundstrip = scene.sequence_editor.sequences.new_sound(
-            "Sound", path, cm_node.sequence_channel, (cm_node.time_off + cm.offset),
+            "Sound", path, cm_node.sequence_channel, (offset + cm.offset),
         )
         soundstrip.show_waveform = True
         return {"FINISHED"}
-
-def AnalyseMidiFile(context):
-    cm_node = context.node
-    cm = context.scene.cm_pg
-    cm_node.message1 = "Midi File Analysed: " + str(os.path.basename(cm_node.midi_file_name))
-    cm_node.message2 = "Check/Load Sound File, Use Velocity, Easing & Offset"
-    fps = bpy.context.scene.render.fps / bpy.context.scene.render.fps_base
-    cm.data_dict.clear()
-    path = bpy.path.abspath(cm_node.midi_file_name)
-    if ".csv" not in path:
-        cm_node.message1 = "No CSV File specified"
-        return
-    with open(path) as f1:
-        for line in f1:
-            in_l = [elt.strip() for elt in line.split(",")]
-            if in_l[2] == "Header":
-                # Get Pulse variable.
-                pulse = int(in_l[5])
-                cm.data_dict["Pulse"] = pulse
-            elif in_l[2] == "Tempo":
-                if in_l[1] == "0":
-                    # Get Initial Tempo.
-                    tempo = in_l[3]
-                    bpm = float(round((60000000 / int(tempo)), 3))
-                    cm.data_dict["BPM"] = bpm
-                    cm.data_dict["Tempo"] = [[0, tempo]]
-                elif in_l[0] == "1" and in_l[2] == "Tempo":
-                    # Add Tempo Changes & timings to Tempo Key in dataD.
-                    frame = round(int(in_l[1]) * (60 * fps) / (bpm * pulse), 2)
-                    cm.data_dict.get("Tempo").append([str(frame), in_l[3]])
-            elif in_l[2] == "Time_signature":
-                # Get Time Signature
-                cm.data_dict["TimeSig"] = [int(in_l[3]), int(in_l[4])]
-            elif (
-                (in_l[2] == "Title_t") and (int(in_l[0]) > 1) and (in_l[3] != "Master Section")
-            ):
-                # Get Track Names & Numbers
-                if in_l[0] == str(cm_node.midi_channel):
-                    tName = in_l[3].strip('"')
-                    cm.data_dict["Track Name"] = tName
-                otName = in_l[3].strip('"')
-                if "Tracks" not in cm.data_dict.keys():
-                    cm.data_dict["Tracks"] = [[otName, int(in_l[0])]]
-                    cm.channels = in_l[0] + " - " + otName
-                else:
-                    cm.data_dict.get("Tracks").append([otName, int(in_l[0])])
-                    cm.channels = cm.channels + "&" + in_l[0] + " - " + otName
-
-    cm_node.message2 = "Midi CSV File Analysed and Data Dictionary Built"
-    return
 
 
 class CM_ND_AnalyseMidiNode(bpy.types.Node):
@@ -194,7 +158,7 @@ class CM_ND_AnalyseMidiNode(bpy.types.Node):
     bl_icon = "SPEAKER"
 
     midi_file_name : StringProperty(subtype="FILE_PATH", name="Midi CSV file", default="//")
-    midi_channel: IntProperty(name="Midi Channel", default=2, min=2)
+    midi_channel : IntProperty(name="Channel", default=2, min=2)
     bpm : IntProperty(name="BPM", default=0)
     tempo : IntProperty(name="1st Tempo", default=0)
     pulse : IntProperty(name="Pulse", default=0)
@@ -202,18 +166,27 @@ class CM_ND_AnalyseMidiNode(bpy.types.Node):
     track_name : StringProperty(name="Track Name", default="")
     tracks : StringProperty(name="Tracks", default="")
 
+
+    def init(self, context):
+        self.outputs.new("cm_socket.sound", "File Info")
+
     def draw_buttons(self, context, layout):
         cm_pg = context.scene.cm_pg
         layout.context_pointer_set("audionode", self)
         layout.prop(self, "midi_file_name")
         layout.prop(self, "midi_channel")
+        layout.prop(self, "track_name")
         layout.prop(self, "bpm")
         layout.prop(self, "pulse")
         layout.prop(self, "tempo")
         layout.prop(self, "time_sig")
-        layout.prop(self, "track_name")
+        layout.prop(cm_pg, "channels")
         layout.prop(self, "tracks")
         layout.operator("cm_audio.analyse_midi", text="Analyse File")
+
+    def info(self,context):
+        cm = context.scene.cm_pg
+        return cm.data_dict
 
 
 class CM_OT_AnalyseMidiFile(bpy.types.Operator):
@@ -230,8 +203,7 @@ class CM_OT_AnalyseMidiFile(bpy.types.Operator):
         cm_node = context.node
         cm = context.scene.cm_pg
         path = bpy.path.abspath(cm_node.midi_file_name)
-        AnalyseMidiFile(context)
-        print(cm.data_dict)
+        analyse_midi_file(context)
         cm_node.pulse = cm.data_dict["Pulse"]
         cm_node.bpm = cm.data_dict["BPM"]
         cm_node.tempo = int(cm.data_dict["Tempo"][0][1])
@@ -261,88 +233,98 @@ class CM_OT_CreateMIDIControls(bpy.types.Operator):
         cm_node = context.node
         cm = context.scene.cm_pg
         path = bpy.path.abspath(cm_node.midi_file_name)
-        AnalyseMidiFile(context)
-        cm.event_dict.clear()
+        analyse_midi_file(context)
         fps = bpy.context.scene.render.fps / bpy.context.scene.render.fps_base
-
-        with open(path) as f1:
-            for line in f1:
-                in_l = [elt.strip() for elt in line.split(",")]
-                if (
-                    (len(in_l) == 6)
-                    and (in_l[2].split("_")[0] == "Note")
-                    and (in_l[0] == str(cm_node.midi_channel))
-                ):
-                    # Note events for the chosen channel
-                    noteNum = int(in_l[4]) - 12 if cm.mid_c else int(in_l[4])
-                    noteName = get_note(noteNum, 0)
-                    if cm_node.use_vel:
-                        velo = round(int(in_l[5]) / 127, 3)
-                        onOff = velo if in_l[2] == "Note_on_c" else 0.0
-                    else:
-                        onOff = 1.0 if in_l[2] == "Note_on_c" else 0.0
-                    # time would be value * 60 / bpm * Pulse
-                    frame = (
-                        int(in_l[1])
-                        * (60 * fps)
-                        / (cm.data_dict.get("BPM") * cm.data_dict.get("Pulse"))
-                    )
-                    # Check frame does not overlap last entry
-                    # Note cannot start before previous same note has finished!
-                    if noteName in cm.event_dict.keys():  # Is not the first note event
-                        lastFrame = cm.event_dict.get(noteName)[-1][0]
-                        if frame <= lastFrame:
-                            frame = (
-                                lastFrame + cm.spacing if cm.spacing > 0 else lastFrame + cm.easing
-                            )
-                    frame = frame + cm.offset
-                    if noteName not in cm.event_dict.keys():
-                        cm.event_dict[noteName] = [[frame, onOff]]
-                    else:
-                        # Add records for events
-                        if cm_node.squ_val:
-                            if in_l[2] == "Note_on_c":
-                                cm.event_dict[noteName].append([(frame - cm.easing), 0.0])
-                            else:
-                                if cm_node.use_vel:
-                                    velo = cm.data_dict.get(noteName)[-1][1]
-                                    cm.event_dict[noteName].append([(frame - cm.easing), velo])
-                                else:
-                                    cm.event_dict[noteName].append([(frame - cm.easing), 1.0])
-                        cm.event_dict[noteName].append([frame, onOff])
-            # Make Control Empties.
-            xLoc = 0
-            for k in cm.event_dict.keys():
-                bpy.ops.object.empty_add(
-                    type="SINGLE_ARROW", location=(xLoc, cm_node.midi_channel / 10, 0), radius=0.03
-                )
-                bpy.context.active_object.name = (
-                    str(k) + "_" + cm_node.suffix + str(cm_node.midi_channel)
-                )
-                bpy.context.active_object.show_name = True
-                indV = True
-                for v in cm.event_dict.get(k):
-                    frm = v[0]
-                    val = v[1]
-                    if indV:
-                        # add keyframe just before first Note On
-                        bpy.context.active_object.location.z = 0
-                        bpy.context.active_object.keyframe_insert(
-                            data_path="location", index=2, frame=frm - cm.easing
+        if cm_node.make_all:
+            channel_list = cm.channels.split(",")
+        else:
+            channel_list = []
+            channel_list.append(str(cm_node.midi_channel))
+        max = 0
+        for channel in channel_list:
+            cm.event_dict.clear()
+            with open(path) as f1:
+                for line in f1:
+                    in_l = [elt.strip() for elt in line.split(",")]
+                    if (
+                        (len(in_l) == 6)
+                        and (in_l[2].split("_")[0] == "Note")
+                        and (in_l[0] == channel)
+                        ):
+                        # taken above str(cm_node.midi_channel)
+                        # Note events for the chosen channel
+                        noteNum = int(in_l[4]) - 12 if cm.mid_c else int(in_l[4])
+                        noteName = get_note(noteNum, 0)
+                        if cm_node.use_vel:
+                            velo = round(int(in_l[5]) / 127, 3)
+                            onOff = velo if in_l[2] == "Note_on_c" else 0.0
+                        else:
+                            onOff = 1.0 if in_l[2] == "Note_on_c" else 0.0
+                        # time would be value * 60 / bpm * Pulse
+                        frame = (
+                            int(in_l[1])
+                            * (60 * fps)
+                            / (cm.data_dict.get("BPM") * cm.data_dict.get("Pulse"))
                         )
-                        indV = False
-                    bpy.context.active_object.location.z = val / 10
-                    bpy.context.active_object.keyframe_insert(
-                        data_path="location", index=2, frame=frm
+                        # Check frame does not overlap last entry
+                        # Note cannot start before previous same note has finished!
+                        if noteName in cm.event_dict.keys():  # Is not the first note event
+                            lastFrame = cm.event_dict.get(noteName)[-1][0]
+                            if frame <= lastFrame:
+                                frame = (
+                                    lastFrame + cm.spacing if cm.spacing > 0 else lastFrame + cm.easing
+                                )
+                        frame = frame + cm.offset
+                        if noteName not in cm.event_dict.keys():
+                            cm.event_dict[noteName] = [[frame, onOff]]
+                        else:
+                            # Add records for events
+                            if cm_node.squ_val:
+                                if in_l[2] == "Note_on_c":
+                                    cm.event_dict[noteName].append([(frame - cm.easing), 0.0])
+                                else:
+                                    if cm_node.use_vel:
+                                        velo = cm.data_dict.get(noteName)[-1][1]
+                                        cm.event_dict[noteName].append([(frame - cm.easing), velo])
+                                    else:
+                                        cm.event_dict[noteName].append([(frame - cm.easing), 1.0])
+                            cm.event_dict[noteName].append([frame, onOff])
+                # Make Control Empties.
+                xLoc = 0
+                for k in cm.event_dict.keys():
+                    bpy.ops.object.empty_add(
+                        type="SINGLE_ARROW", location=(xLoc, int(channel) / 10, 0), radius=0.03
                     )
-                bpy.context.active_object.select_set(state=False)
-                xLoc = xLoc + 0.1
-            cm_node.message1 = "Process Complete"
+                    bpy.context.active_object.name = f"{str(k)}_{cm_node.suffix}{channel}"
+                    #(
+                    #    str(k) + "_" + cm_node.suffix + channel
+                    #)
+                    if cm_node.label_cont:
+                        bpy.context.active_object.show_name = True
+                    indV = True
+                    for v in cm.event_dict.get(k):
+                        frm = v[0]
+                        val = v[1]
+                        if indV:
+                            # add keyframe just before first Note On
+                            bpy.context.active_object.location.z = 0
+                            bpy.context.active_object.keyframe_insert(
+                                data_path="location", index=2, frame=frm - cm.easing
+                            )
+                            indV = False
+                        bpy.context.active_object.location.z = val / 10
+                        bpy.context.active_object.keyframe_insert(
+                            data_path="location", index=2, frame=frm
+                        )
+                    bpy.context.active_object.select_set(state=False)
+                    xLoc = xLoc + 0.1
+                cm_node.message1 = "Process Complete"
+                max = max + sum(len(v) for v in cm.event_dict.values())
             cm_node.message2 = (
                 "Channel "
-                + str(cm_node.midi_channel)
+                + cm.channels
                 + " Processed, Events: "
-                + str(sum(len(v) for v in cm.event_dict.values()))
+                + str(max)
             )
 
         return {"FINISHED"}
@@ -350,7 +332,7 @@ class CM_OT_CreateMIDIControls(bpy.types.Operator):
 
 class CM_OT_CreateMIDISound(bpy.types.Operator):
     bl_idname = "cm_audio.create_sound"
-    bl_label = "Create MIDI Sound in VSE"
+    bl_label = "Create MIDI Sound (in VSE)"
     bl_options = {"REGISTER", "UNDO"}
 
     @classmethod
@@ -359,11 +341,10 @@ class CM_OT_CreateMIDISound(bpy.types.Operator):
         return ".csv" in cm_node.midi_file_name and ".flac" in cm_node.write_name
 
     def execute(self, context):
-        # FIXME: Problems with mulit-notes!
         cm_node = context.node
         cm = context.scene.cm_pg
         path = bpy.path.abspath(cm_node.midi_file_name)
-        AnalyseMidiFile(context)
+        analyse_midi_file(context)
         cm.time_dict.clear()
 
         with open(path) as f1:

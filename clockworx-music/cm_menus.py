@@ -42,8 +42,7 @@ class CM_PT_PanelDesign(Panel):
 
     @classmethod
     def poll(cls, context):
-        return (context.space_data.tree_type == "cm_AudioNodeTree" and
-            context.area.type == "NODE_EDITOR")
+        return context.space_data.tree_type == "cm_AudioNodeTree"
 
     def draw(self, context):
         layout = self.layout
@@ -51,8 +50,16 @@ class CM_PT_PanelDesign(Panel):
         box = layout.box()
         box.label(text="Execution on Frame Change")
         row = box.row()
-        row.operator("cm_audio.execute_start", text="Start", icon="PLAY")
-        row.operator("cm_audio.execute_stop", text="Stop", icon="SNAP_FACE")
+        row.operator("cm_audio.execute_start", text="Start Exec", icon="PLAY")
+        row.operator("cm_audio.execute_stop", text="Stop Exec", icon="SNAP_FACE")
+        box.label(text="Execution by Time Interval")
+        row = box.row()
+        row.operator("cm_audio.midi_start", text="Start Midi", icon="PLAY")
+        row.operator("cm_audio.midi_stop", text="Stop Midi", icon="SNAP_FACE")
+        row = box.row()
+        row.prop(cm_pg, "midi_poll_time")
+        row.prop(cm_pg, "midi_debug")
+
         layout.label(text="CM Constants")
         layout.prop(cm_pg, "bpm")
         layout.prop(cm_pg, "time_sig_num")

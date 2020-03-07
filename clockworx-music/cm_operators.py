@@ -25,7 +25,11 @@ import os
 import aud
 import bpy
 from pathlib import Path
-from .cm_functions import view_lock
+from .cm_functions import (
+    view_lock,
+    run_midi_always,
+    start_clock,
+    )
 
 
 class CM_OT_PlayAudioNodeOperator(bpy.types.Operator):
@@ -103,17 +107,21 @@ class CM_OT_DisplayAudioNodeOperator(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        context.audionode.execute()
+        context.audionode.info(context)
         return {"FINISHED"}
 
 
-def start_clock(scene):
-    for nodetree in [
-        n for n in bpy.data.node_groups if n.rna_type.name == "Clockworx Music Editor"
-        ]:
-        for n in nodetree.nodes:
-            if (hasattr(n, "execute")):
-                n.execute()
+class CM_OT_DisplayMidiNodeOperator(bpy.types.Operator):
+    bl_idname = "cm_audio.display_midi"
+    bl_label = "Display Info"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        context.audionode.get_midi()
+        return {"FINISHED"}
 
 
 class CM_OT_ExecuteStartOperator(bpy.types.Operator):
@@ -125,10 +133,11 @@ class CM_OT_ExecuteStartOperator(bpy.types.Operator):
         return start_clock not in bpy.app.handlers.frame_change_post
 
     def execute(self, context):
-        scene = context.scene
-        cm = scene.cm_pg
+        cm = context.scene.cm_pg
         if start_clock not in bpy.app.handlers.frame_change_post:
             bpy.app.handlers.frame_change_post.append(start_clock)
+        #if start_clock not in bpy.app.handlers.render_init:
+        #    bpy.app.handlers.render_init.append(start_clock)
         return {"FINISHED"}
 
 
@@ -141,10 +150,38 @@ class CM_OT_ExecuteStopOperator(bpy.types.Operator):
         return start_clock in bpy.app.handlers.frame_change_post
 
     def execute(self, context):
-        scene = context.scene
-        cm = scene.cm_pg
+        cm = context.scene.cm_pg
         if start_clock in bpy.app.handlers.frame_change_post:
             bpy.app.handlers.frame_change_post.remove(start_clock)
+        #if start_clock in bpy.app.handlers.render_init:
+        #    bpy.app.handlers.render_init.append(start_clock)
+        return {"FINISHED"}
+
+
+class CM_OT_MIDIStartOperator(bpy.types.Operator):
+    bl_idname = "cm_audio.midi_start"
+    bl_label = "CM Execute Start"
+
+    @classmethod
+    def poll(cls, context):
+        return not bpy.app.timers.is_registered(run_midi_always)
+
+    def execute(self, context):
+        bpy.app.timers.register(run_midi_always)
+        return {"FINISHED"}
+
+
+class CM_OT_MIDIStopOperator(bpy.types.Operator):
+    bl_idname = "cm_audio.midi_stop"
+    bl_label = "CM Execute Stop"
+
+    @classmethod
+    def poll(cls, context):
+        return bpy.app.timers.is_registered(run_midi_always)
+
+    def execute(self, context):
+        if bpy.app.timers.is_registered(run_midi_always):
+            bpy.app.timers.unregister(run_midi_always)
         return {"FINISHED"}
 
 
@@ -157,8 +194,7 @@ class CM_OT_SetConstantsOperator(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        scene = context.scene
-        cm = scene.cm_pg
+        cm = context.scene.cm_pg
         cm_node = context.node
         cm.bpm = cm_node.bpm
         cm.time_sig_num = cm_node.time_sig_num
@@ -187,8 +223,7 @@ class CM_OT_SetConstantsMenu(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        scene = context.scene
-        cm = scene.cm_pg
+        cm = context.scene.cm_pg
         note_den = int(cm.note_den)
         fps = int((cm.bpm / 60 * note_den) * 100)
         bpy.context.scene.render.fps = fps
@@ -204,8 +239,7 @@ class CM_OT_impKeyb88(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self,context):
-        scene = context.scene
-        cm = scene.cm_pg
+        cm = context.scene.cm_pg
         path = (str(bpy.utils.user_resource('SCRIPTS', "addons"))
             + '/clockworx-music/imports/88keys.dae')
         bpy.ops.wm.collada_import(filepath=path)
@@ -219,12 +253,11 @@ class CM_OT_impKeyb61(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self,context):
-        scene = context.scene
-        cm = scene.cm_pg
+        cm = context.scene.cm_pg
         path = (str(bpy.utils.user_resource('SCRIPTS', "addons"))
             + '/clockworx-music/imports/61keys.dae')
         bpy.ops.wm.collada_import(filepath=path)
-        cm_pg.message1 = "Import 61 Key Board Completed"
+        cm.message1 = "Import 61 Key Board Completed"
         return {"FINISHED"}
 
 class CM_OT_impFrets(bpy.types.Operator):
@@ -233,21 +266,21 @@ class CM_OT_impFrets(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        cm_pg = context.scene.cm_pg
+        cm = context.scene.cm_pg
         path = (str(bpy.utils.user_resource('SCRIPTS', "addons")) +
             '/clockworx-music/imports/frets.dae')
         bpy.ops.wm.collada_import(filepath=path)
-        cm_pg.message1 = ''
+        cm.message1 = ''
         src_obj = bpy.context.view_layer.objects.get('Base-Mesh')
         src_obj.name = 'Bridge'
         src_obj.select_set(state=True)
-        src_obj.scale = (cm_pg.bridge_len, cm_pg.bridge_len, cm_pg.bridge_len)
+        src_obj.scale = (cm.bridge_len, cm.bridge_len, cm.bridge_len)
         bpy.context.view_layer.objects.active = src_obj
         bpy.ops.object.transform_apply(location = False, scale = True, rotation = False)
         src_obj.select_set(state=False)
-        scl = cm_pg.scale_f
+        scl = cm.scale_f
         xLoc = src_obj.location.x
-        fret = cm_pg.bridge_len
+        fret = cm.bridge_len
 
         fret_name = ['NUT','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
             'F13','F14','F15','F16','F17','F18','F19','F20','F21','F22','F23','F24']
@@ -263,9 +296,9 @@ class CM_OT_impFrets(bpy.types.Operator):
             bpy.ops.object.transform_apply(location = False, scale = True, rotation = False)
             new_obj.select_set(state=False)
             fret = fret * (0.5**(1/12))
-            scl = (cm_pg.scale_f + (((cm_pg.bridge_len - fret) / cm_pg.bridge_len)
-                * (1 - cm_pg.scale_f)))
-        cm_pg.message1 = "Fretboard Built in Active Collection"
+            scl = (cm.scale_f + (((cm.bridge_len - fret) / cm.bridge_len)
+                * (1 - cm.scale_f)))
+        cm.message1 = "Fretboard Built in Active Collection"
         return {"FINISHED"}
 
 class CM_OT_renMesh(bpy.types.Operator):
@@ -274,22 +307,22 @@ class CM_OT_renMesh(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        cm_pg = context.scene.cm_pg
-        if cm_pg.col_name is not "" and cm_pg.suffix_obj is not "":
-            if bpy.data.collections.get(cm_pg.col_name) is not None:
-                for o in bpy.data.collections[cm_pg.col_name].objects:
+        cm = context.scene.cm_pg
+        if cm.col_name is not "" and cm.suffix_obj is not "":
+            if bpy.data.collections.get(cm.col_name) is not None:
+                for o in bpy.data.collections[cm.col_name].objects:
                     if "_" in o.name:
-                        o.name = o.name.split("_")[0] + "_" + cm_pg.suffix_obj
+                        o.name = o.name.split("_")[0] + "_" + cm.suffix_obj
                     else:
-                        o.name = o.name + "_" + cm_pg.suffix_obj
-                cm_pg.message1 = ("Processed "
-                    + str(len(bpy.data.collections[cm_pg.col_name].objects))
+                        o.name = o.name + "_" + cm.suffix_obj
+                cm.message1 = ("Processed "
+                    + str(len(bpy.data.collections[cm.col_name].objects))
                     + " Objects")
             else:
-                cm_pg.message1 = "Collection Does Not Exist"
+                cm.message1 = "Collection Does Not Exist"
                 return
         else:
-            cm_pg.message1 = "Enter Collection/Siffix"
+            cm.message1 = "Enter Collection/Siffix"
         return {"FINISHED"}
 
 

@@ -41,7 +41,7 @@ from .cm_sockets import (
 
 from .cm_functions import (
     connected_node_sound,
-    connected_node_sound,
+    connected_node_info,
     get_socket_values,
     get_index,
     get_freq,
@@ -60,20 +60,16 @@ class CM_ND_AudioDebugNode(bpy.types.Node):
     text_input: bpy.props.StringProperty(name="Value", default="")
 
     def init(self, context):
-        self.inputs.new("cm_socket.generic", "Input")
+        self.inputs.new("cm_socket.sound", "Input")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "text_input")
         layout.context_pointer_set("audionode", self)
         layout.operator("cm_audio.display_audio")
 
-    def execute(self):
-        sockets = self.inputs.keys()
-        input_values = get_socket_values(self, sockets, self.inputs)
-        if len(input_values) == 1:
-            self.text_input = str(input_values[0])
-        else:
-            self.text_input = str(input_values)
+    def info(self, context):
+        input = connected_node_info(self, 0)
+        self.text_input = str(input)
 
 
 class CM_ND_AudioFrameNode(bpy.types.Node):
@@ -505,14 +501,14 @@ class CM_ND_AudioWriteNode(bpy.types.Node):
     def draw_buttons(self, context, layout):
         layout.context_pointer_set("audionode", self)
         layout.operator("cm_audio.play_audio")
-        layout.operator("cm_audio.stop_audio")
-        layout.prop(self, "write_name")
-        layout.prop(self, "strip_name")
-        layout.prop(self, "add_file")
-        layout.prop(self, "time_off")
-        layout.prop(self, "sequence_channel")
-        layout.context_pointer_set("audionode", self)
-        layout.operator("cm_audio.write_audio")
+        box = layout.box()
+        box.operator("cm_audio.stop_audio")
+        box.prop(self, "write_name")
+        box.prop(self, "strip_name")
+        box.prop(self, "add_file")
+        box.prop(self, "time_off")
+        box.prop(self, "sequence_channel")
+        box.operator("cm_audio.write_audio")
 
 
 class CM_ND_AudioControlNode(bpy.types.Node):

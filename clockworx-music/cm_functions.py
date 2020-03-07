@@ -23,23 +23,40 @@
 #
 import aud
 import bpy
+import os
 from mathutils import Quaternion
 
 
 def connected_node(node, socket):
+    """ Get Connected Node from Socket Num"""
     for link in node.id_data.links:
         if link.to_socket == node.inputs[socket]:
             return link.from_node
     return None
 
+def connected_node_info(node, socket):
+    """Get Return from info() Function"""
+    node = connected_node(node, socket)
+    if node == None:
+        return None
+    return node.info(bpy.context)
 
-#def timer_operate():
-#    print("Done")
-#    return 2.0
-#bpy.app.timers.register(timer_operate)
+def connected_node_sound(node, socket):
+    """Get Return from get_sound() Function"""
+    node = connected_node(node, socket)
+    if node == None:
+        return None
+    return node.get_sound()
 
+def connected_node_midi(node, socket):
+    """Get Return from get_midi() Function"""
+    node = connected_node(node, socket)
+    if node == None:
+        return None
+    return node.get_midi()
 
 def view_lock():
+    """Lock the View Rotation & Scale for DAW"""
     for area in bpy.context.screen.areas:
         if area.type == 'VIEW_3D':
             area.spaces[0].region_3d.view_rotation = Quaternion((1, 0, 0, 0))
@@ -49,13 +66,8 @@ def view_lock():
                 area.spaces[0].region_3d.view_distance = 10
 
 
-def connected_node_sound(node, socket):
-    node = connected_node(node, socket)
-    if node == None:
-        return None
-    return node.get_sound()
-
 def get_socket_values(node, sockets, node_inputs):
+    """Get Values from Input Sockets"""
     inputs = []
     for i in range(len(sockets)):
         socket = connected_node(node, i)
@@ -67,6 +79,87 @@ def get_socket_values(node, sockets, node_inputs):
         else:
             inputs.append(node_inputs[sockets[i]].value)
     return inputs
+
+
+def start_clock(scene):
+    """Run Execute Function in Nodes"""
+    for nodetree in [
+        n for n in bpy.data.node_groups if n.rna_type.name == "Clockworx Music Editor"
+        ]:
+        for n in nodetree.nodes:
+            if (hasattr(n, "execute")):
+                n.execute()
+
+
+def start_midi():
+    """Run MIDI Function in Nodes"""
+    for nodetree in [
+        n for n in bpy.data.node_groups if n.rna_type.name == "Clockworx Music Editor"
+        ]:
+        for n in nodetree.nodes:
+            if (hasattr(n, "get_midi")):
+                n.get_midi()
+
+
+def run_midi_always():
+    """Run MIDI Function at Time Inteval"""
+    cm = bpy.context.scene.cm_pg
+    cm_pg = bpy.context.scene.cm_pg
+    start_midi()
+    return cm.midi_poll_time
+
+
+def analyse_midi_file(context):
+    """Analyse MIDI File"""
+    cm_node = context.node
+    cm = context.scene.cm_pg
+    cm_node.message1 = "Midi File Analysed: " + str(os.path.basename(cm_node.midi_file_name))
+    cm_node.message2 = "Check/Load Sound File, Use Velocity, Easing & Offset"
+    fps = bpy.context.scene.render.fps / bpy.context.scene.render.fps_base
+    cm.data_dict.clear()
+    path = bpy.path.abspath(cm_node.midi_file_name)
+    if ".csv" not in path:
+        cm_node.message1 = "No CSV File specified"
+        return
+    with open(path) as f1:
+        for line in f1:
+            in_l = [elt.strip() for elt in line.split(",")]
+            if in_l[2] == "Header":
+                # Get Pulse variable.
+                pulse = int(in_l[5])
+                cm.data_dict["Pulse"] = pulse
+            elif in_l[2] == "Tempo":
+                if in_l[1] == "0":
+                    # Get Initial Tempo.
+                    tempo = in_l[3]
+                    bpm = float(round((60000000 / int(tempo)), 3))
+                    cm.data_dict["BPM"] = bpm
+                    cm.data_dict["Tempo"] = [[0, tempo]]
+                elif in_l[0] == "1" and in_l[2] == "Tempo":
+                    # Add Tempo Changes & timings to Tempo Key in dataD.
+                    frame = round(int(in_l[1]) * (60 * fps) / (bpm * pulse), 2)
+                    cm.data_dict.get("Tempo").append([str(frame), in_l[3]])
+            elif in_l[2] == "Time_signature":
+                # Get Time Signature
+                cm.data_dict["TimeSig"] = [int(in_l[3]), int(in_l[4])]
+            elif (
+                (in_l[2] == "Title_t") and (int(in_l[0]) > 1) and (in_l[3] != "Master Section")
+            ):
+                # Get Track Names & Numbers
+                if in_l[0] == str(cm_node.midi_channel):
+                    tName = in_l[3].strip('"')
+                    cm.data_dict["Track Name"] = tName
+                otName = in_l[3].strip('"')
+                if "Tracks" not in cm.data_dict.keys():
+                    cm.data_dict["Tracks"] = [[otName, int(in_l[0])]]
+                    cm.channels = in_l[0]# + " - " + otName
+                else:
+                    cm.data_dict.get("Tracks").append([otName, int(in_l[0])])
+                    cm.channels = cm.channels + "," + in_l[0]# + "&" + in_l[0] + " - " + otName
+
+    cm_node.message2 = "Midi CSV File Analysed and Data Dictionary Built"
+    return
+
 
 note_list = [
     'c0','cs0','d0','ds0','e0','f0','fs0','g0','gs0','a0','as0','b0',
@@ -95,28 +188,34 @@ note_freq = [
     8372.018,8869.844,9397.272,9956.064,10548.08,11175.30,11839.82,12543.85,13289.75,14080.0,14917.24,15804.27,
     16744.04,17739.69,18794.54,19912.13,21096.16,22350.60,23679.64,25087.70,26579.50,28160.0,29834.48,31608.54]
 
+
 def get_note(note_idx, offset):
+    """Get Note Name from Index"""
     if (note_idx + offset) < len(note_list):
         return note_list[note_idx + offset]
     else:
         return "None"
 
 def find_note(freq_index):
+    """Find Note Index from Frequency"""
     idx = next((i for i, x in enumerate(note_freq) if x == freq_index), -1)
     note_name = noteList[idx] if idx > -1 else "Not a Note"
     return note_name
 
 def get_index(note_name):
+    """Get Not Index from Name"""
     index = next((i for i, x in enumerate(note_list) if x == note_name), -1)
     return index
 
 def get_freq(index):
+    """Get Frequency from Position in Frequencies"""
     if index < len(note_freq):
         return note_freq[index]
     else:
         return -1
 
 def get_chord_ind(note_name, mode):
+    """Build Chord Sequence from Note Name"""
     idx = next((i for i, x in enumerate(note_list) if x == note_name), -1)
     freq_list = []
     if len(note_name) >= 2 and note_name[1] == 's':
@@ -136,6 +235,7 @@ def get_chord_ind(note_name, mode):
     return freq_list
 
 def get_chord(note_name, mode):
+    """Build Areggio Sequence from Note Name"""
     idx = next((i for i, x in enumerate(note_list) if x == note_name), -1)
     freq_list = []
     if len(note_name) >= 2 and note_name[1] == 's':
@@ -177,6 +277,7 @@ def get_chord(note_name, mode):
 
 
 def osc_generate(input_values, gen_type, samples):
+    """Make Sound from Frequency, Type & Samples"""
     if gen_type == "sine":
         sound = aud.Sound.sine(input_values[1], samples)
     elif gen_type == "triangle":

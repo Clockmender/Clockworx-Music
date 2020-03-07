@@ -45,6 +45,7 @@ if "bpy" in locals():
     importlib.reload(cm_midi_bake)
     importlib.reload(cm_objects)
     importlib.reload(cm_menus)
+    importlib.reload(cm_midi)
 else:
     from . import cm_sockets
     from . import cm_nodes
@@ -54,6 +55,7 @@ else:
     from . import cm_midi_bake
     from . import cm_objects
     from . import cm_menus
+    from . import cm_midi
 
 
 import aud
@@ -124,6 +126,16 @@ class CMSceneProperties(PropertyGroup):
     data_dict = {}
     event_dict = {}
     time_dict = {}
+    # For MIDI Live
+    midi_buffer1 : StringProperty(name="Buffer 1")
+    midi_buffer2 : StringProperty(name="Buffer 2")
+    midi_buffer = {}
+    midi_buffer["buffer1"] = []
+    midi_buffer["buffer2"] = []
+    midi_poll_time : FloatProperty(name="Time", default=0.1, min=0.04, max=1)
+    midi_debug : BoolProperty(name="Debug", default=False,
+        description="Output MIDI Buffer to Console")
+
     message1 : StringProperty(name="")
     col_name : StringProperty(name="Collection", default="")
     suffix_obj : StringProperty(name="Suffix", default="key")
@@ -171,6 +183,7 @@ categories = [
         #NodeItem("cm_audio.control_node"),
         NodeItem("cm_audio.analyse_midi_node"),
         NodeItem("cm_audio.midi_bake_node"),
+        NodeItem("cm_audio_midi_init_node"),
     ]),
         AudioIONodeCategory("AUDIO_PROP_CATEGORY", "Constants/Info", items = [
         NodeItem("cm_audio.text_node"),
@@ -213,12 +226,15 @@ categories = [
         NodeItem("cm_audio.sequence_node"),
         NodeItem("cm_audio.loop_node"),
         NodeItem("cm_audio.mix_node"),
+        NodeItem("cm_audio.mix_eight_node"),
         NodeItem("cm_audio.pingpong_node"),
         NodeItem("cm_audio.slicer_node"),
     ]),
         AudioSequenceNodeCategory("AUDIO_OBJECT_CATEGORY", "Objects", items = [
         NodeItem("cm_audio.object_loc_node"),
         NodeItem("cm_audio.piano_roll_node"),
+        NodeItem("cm_audio_midi_anim_node"),
+        NodeItem("cm_audio.midi_note_node"),
     ]),
 ]
 
@@ -233,6 +249,7 @@ classes = [
     cm_sockets.CM_SK_TextNodeSocket,
     cm_sockets.CM_SK_BoolNodeSocket,
     cm_sockets.CM_SK_GenericNodeSocket,
+    cm_sockets.CM_SK_GenericOutNodeSocket,
     cm_nodes.CM_ND_AudioTextNode,
     cm_nodes.CM_ND_AudioFloatNode,
     cm_nodes.CM_ND_AudioIntNode,
@@ -264,6 +281,7 @@ classes = [
     cm_filter_nodes.CM_ND_AudioJoinNode,
     cm_filter_nodes.CM_ND_AudioSequenceNode,
     cm_filter_nodes.CM_ND_AudioMixNode,
+    cm_filter_nodes.CM_ND_AudioMixEightNode,
     cm_filter_nodes.CM_ND_AudioModulateNode,
     cm_filter_nodes.CM_ND_AudioPingPongNode,
     cm_filter_nodes.CM_ND_AudioReverseNode,
@@ -271,6 +289,7 @@ classes = [
     cm_filter_nodes.CM_ND_AudioSlicerNode,
     cm_operators.CM_OT_PlayAudioNodeOperator,
     cm_operators.CM_OT_DisplayAudioNodeOperator,
+    cm_operators.CM_OT_DisplayMidiNodeOperator,
     cm_operators.CM_OT_ExecuteStartOperator,
     cm_operators.CM_OT_ExecuteStopOperator,
     cm_operators.CM_OT_SetConstantsOperator,
@@ -283,6 +302,8 @@ classes = [
     cm_operators.CM_OT_renMesh,
     cm_operators.CM_OT_UnlockView,
     cm_operators.CM_OT_lockView,
+    cm_operators.CM_OT_MIDIStartOperator,
+    cm_operators.CM_OT_MIDIStopOperator,
     cm_midi_bake.CM_ND_AudioMidiBakeNode,
     cm_midi_bake.CM_OT_LoadSoundFile,
     cm_midi_bake.CM_OT_CreateMIDIControls,
@@ -296,16 +317,21 @@ classes = [
     cm_objects.CM_OT_GetName,
     cm_objects.CM_OT_GetSuffix,
     cm_objects.CM_OT_GetTarget,
+    cm_midi.CM_ND_MidiInitNode,
+    cm_midi.CM_ND_MidiAnimNode,
+    cm_midi.CM_ND_MidiNoteNode,
     ]
 
 
 def register():
+
     for cls in classes:
         bpy.utils.register_class(cls)
 
     Scene.cm_pg = PointerProperty(type=CMSceneProperties)
 
     nodeitems_utils.register_node_categories("AUDIO_CATEGORIES", categories)
+
 
 def unregister():
     for cls in classes:
