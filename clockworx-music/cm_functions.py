@@ -24,7 +24,8 @@
 import aud
 import bpy
 import os
-from mathutils import Quaternion
+from mathutils import Quaternion, Vector, Euler
+from math import pi
 
 
 def connected_node(node, socket):
@@ -108,6 +109,16 @@ def run_midi_always():
     start_midi()
     return cm.midi_poll_time
 
+def off_set(values, factors):
+    x_loc = values[0] * factors.x
+    y_loc = values[1] * factors.y
+    z_loc = values[2] * factors.z
+
+    return (
+        Vector((x_loc, y_loc, z_loc)),
+        Euler(((x_loc * pi / 180), (y_loc * pi / 180), (z_loc * pi / 180))),
+        Vector(((1 + x_loc), (1 + y_loc), (1 + z_loc)))
+        )
 
 def analyse_midi_file(context):
     """Analyse MIDI File"""

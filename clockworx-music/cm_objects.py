@@ -171,7 +171,7 @@ class CM_ND_ObjectLocNode(bpy.types.Node):
         box.prop(self, "anim_type")
         row = box.row()
         row.prop(self, "control_name")
-        row.operator("cm_audio.get_name", text="", icon="EYEDROPPER")
+        row.operator("cm_audio.get_name", text="", icon="STYLUS_PRESSURE")
         row = box.row()
         box.prop(self, "factor_x")
         box.prop(self, "factor_y")
@@ -182,14 +182,14 @@ class CM_ND_ObjectLocNode(bpy.types.Node):
         row.prop(self, "lz_bool")
         row = box.row()
         row.prop(self, "object_name")
-        row.operator("cm_audio.get_target", text="", icon="EYEDROPPER")
+        row.operator("cm_audio.get_target", text="", icon="STYLUS_PRESSURE")
         layout.label(text="")
         box = layout.box()
         box.prop(self, "message", text="")
         box.prop(self, "animate_group")
         row = box.row()
         row.prop(self, "suffix")
-        row.operator("cm_audio.get_suffix", text="", icon="EYEDROPPER")
+        row.operator("cm_audio.get_suffix", text="", icon="STYLUS_PRESSURE")
 
     def execute(self):
         def off_set(obj):

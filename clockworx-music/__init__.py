@@ -127,11 +127,19 @@ class CMSceneProperties(PropertyGroup):
     event_dict = {}
     time_dict = {}
     # For MIDI Live
-    midi_buffer1 : StringProperty(name="Buffer 1")
-    midi_buffer2 : StringProperty(name="Buffer 2")
     midi_buffer = {}
     midi_buffer["buffer1"] = []
     midi_buffer["buffer2"] = []
+    midi_data = {}
+    note_buff = []
+    param_buff = []
+    for i in range(128):
+        note_buff.append(0)
+        param_buff.append(0)
+    midi_data["notes"] = note_buff
+    midi_data["params"] = param_buff
+    midi_data["notes_cu"] = 0
+    midi_data["params_cu"] = 0
     midi_poll_time : FloatProperty(name="Time", default=0.1, min=0.04, max=1)
     midi_debug : BoolProperty(name="Debug", default=False,
         description="Output MIDI Buffer to Console")
@@ -184,6 +192,8 @@ categories = [
         NodeItem("cm_audio.analyse_midi_node"),
         NodeItem("cm_audio.midi_bake_node"),
         NodeItem("cm_audio_midi_init_node"),
+        NodeItem("cm_audio_midi_midi_handler"),
+        NodeItem("cm_audio_midi_accum"),
     ]),
         AudioIONodeCategory("AUDIO_PROP_CATEGORY", "Constants/Info", items = [
         NodeItem("cm_audio.text_node"),
@@ -193,6 +203,7 @@ categories = [
         NodeItem("cm_audio.debug_node"),
         NodeItem("cm_audio.info_node"),
         NodeItem("cm_audio.sound_info_node"),
+        NodeItem("cm_audio.midi_note_node"),
         NodeItem("cm_audio.frame_node"),
         NodeItem("cm_audio.time_node"),
         NodeItem("cm_audio.beats_node"),
@@ -234,7 +245,7 @@ categories = [
         NodeItem("cm_audio.object_loc_node"),
         NodeItem("cm_audio.piano_roll_node"),
         NodeItem("cm_audio_midi_anim_node"),
-        NodeItem("cm_audio.midi_note_node"),
+        NodeItem("cm_audio_float_anim_node"),
     ]),
 ]
 
@@ -304,6 +315,7 @@ classes = [
     cm_operators.CM_OT_lockView,
     cm_operators.CM_OT_MIDIStartOperator,
     cm_operators.CM_OT_MIDIStopOperator,
+    cm_operators.CM_OT_resetAccum,
     cm_midi_bake.CM_ND_AudioMidiBakeNode,
     cm_midi_bake.CM_OT_LoadSoundFile,
     cm_midi_bake.CM_OT_CreateMIDIControls,
@@ -320,6 +332,9 @@ classes = [
     cm_midi.CM_ND_MidiInitNode,
     cm_midi.CM_ND_MidiAnimNode,
     cm_midi.CM_ND_MidiNoteNode,
+    cm_midi.CM_ND_MidiHandlerNode,
+    cm_midi.CM_ND_MidiAccumNode,
+    cm_midi.CM_ND_FloatAnimNode
     ]
 
 

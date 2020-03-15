@@ -360,3 +360,14 @@ class CM_OT_lockView(bpy.types.Operator):
     def execute(self, context):
         view_lock()
         return {"FINISHED"}
+
+
+class CM_OT_resetAccum(bpy.types.Operator):
+    bl_idname = "cm_audio.reset_accu"
+    bl_label = "Reset Accumulator"
+
+    def execute(self, context):
+        cm = bpy.context.scene.cm_pg
+        cm.midi_data["notes_cu"] = 0
+        cm.midi_data["params_cu"] = 0
+        return {"FINISHED"}
