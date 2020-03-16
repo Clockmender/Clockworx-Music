@@ -358,9 +358,6 @@ class CM_ND_AudioChordNode(bpy.types.Node):
         layout.prop(self, "num_notes")
 
     def get_sound(self):
-        self.use_custom_color = True
-        self.useNetworkColor = False
-        self.color = (0.5,0.75,1.0)
         cm = bpy.context.scene.cm_pg
         sockets = self.inputs.keys()
         input_values = get_socket_values(self, sockets, self.inputs)
@@ -416,9 +413,6 @@ class CM_ND_AudioArpeggioNode(bpy.types.Node):
             layout.prop(self, "message", text="")
 
     def get_sound(self):
-        self.use_custom_color = True
-        self.useNetworkColor = False
-        self.color = (0.5,0.75,1.0)
         cm = bpy.context.scene.cm_pg
         sockets = self.inputs.keys()
         input_values = get_socket_values(self, sockets, self.inputs)
