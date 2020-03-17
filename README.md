@@ -32,7 +32,7 @@ At some stage these will be required for Live MIDI & Sound connections.
 
 You should make sure pip is installed by navigating to the blender python/bin directory then:
 
-./python3.7m - m ensurepip
+./python3.7m -m ensurepip
 
 Then install the libraries (I think Windows might be python3.7m.exe)
 
