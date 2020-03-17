@@ -37,29 +37,15 @@ bl_info = {
 if "bpy" in locals():
     import importlib
 
-    importlib.reload(cm_sockets)
-    importlib.reload(cm_nodes)
-    importlib.reload(cm_filter_nodes)
-    importlib.reload(cm_operators)
     importlib.reload(cm_functions)
-    importlib.reload(cm_midi_bake)
-    importlib.reload(cm_objects)
-    importlib.reload(cm_menus)
-    importlib.reload(cm_midi)
 else:
-    from . import cm_sockets
-    from . import cm_nodes
-    from . import cm_filter_nodes
-    from . import cm_operators
     from . import cm_functions
-    from . import cm_midi_bake
-    from . import cm_objects
-    from . import cm_menus
-    from . import cm_midi
 
 
 import aud
 import bpy
+import addon_utils
+import importlib
 import nodeitems_utils
 from nodeitems_utils import NodeItem, NodeCategory
 from bpy.types import PropertyGroup, Scene
@@ -123,6 +109,12 @@ class CMSceneProperties(PropertyGroup):
     channels : StringProperty()
     message : StringProperty(name="")
     type_bool : BoolProperty(name="Time (True) or Beats", default=True)
+    message1 : StringProperty(name="")
+    col_name : StringProperty(name="Collection", default="")
+    suffix_obj : StringProperty(name="Suffix", default="key")
+    bridge_len : FloatProperty(name = "Bridge Length", min=0.5,max=1.0)
+    scale_f : FloatProperty(name = "Scale Factor", min=0.5, max=1)
+
     data_dict = {}
     event_dict = {}
     time_dict = {}
@@ -130,25 +122,25 @@ class CMSceneProperties(PropertyGroup):
     midi_buffer = {}
     midi_buffer["buffer1"] = []
     midi_buffer["buffer2"] = []
+
     midi_data = {}
     note_buff = []
     param_buff = []
+    note_buff_cu = []
+    param_buff_cu = []
     for i in range(128):
         note_buff.append(0)
         param_buff.append(0)
+        note_buff_cu.append(0)
+        param_buff_cu.append(0)
     midi_data["notes"] = note_buff
     midi_data["params"] = param_buff
-    midi_data["notes_cu"] = 0
-    midi_data["params_cu"] = 0
-    midi_poll_time : FloatProperty(name="Time", default=0.1, min=0.04, max=1)
+    midi_data["notes_cu"] = note_buff_cu
+    midi_data["params_cu"] = param_buff_cu
+
+    midi_poll_time : FloatProperty(name="Time", default=0.1, min=0.02, max=1)
     midi_debug : BoolProperty(name="Debug", default=False,
         description="Output MIDI Buffer to Console")
-
-    message1 : StringProperty(name="")
-    col_name : StringProperty(name="Collection", default="")
-    suffix_obj : StringProperty(name="Suffix", default="key")
-    bridge_len : FloatProperty(name = "Bridge Length", min=0.5,max=1.0)
-    scale_f : FloatProperty(name = "Scale Factor", min=0.5, max=1)
 
 
 class AudioSetupNodeCategory(NodeCategory):
@@ -249,93 +241,59 @@ categories = [
     ]),
 ]
 
+def print_log(parent=None, child=None, func=None, msg=""):
+    log = "Clockworx_music: "
+    if (parent):
+        log += parent + ": "
+    if (child):
+        log += child + ": "
+    if (func):
+        log += func + "(): "
+    log += msg
+    print(log)
+
+def import_sockets(path="./"):
+    out = []
+    for i in bpy.path.module_names(path + "sockets"):
+        out.append(getattr(importlib.import_module(".sockets." + i[0], __name__), i[0]))
+        print_log("IMPORT SOCKET", msg=i[0])
+    return out
+
+def import_menus(path="./"):
+    out = []
+    for i in bpy.path.module_names(path + "menus"):
+        out.append(getattr(importlib.import_module(".menus." + i[0], __name__), i[0]))
+        print_log("IMPORT MENU", msg=i[0])
+    return out
+
+def import_operators(path="./"):
+    out = []
+    for i in bpy.path.module_names(path + "operators"):
+        out.append(getattr(importlib.import_module(".operators." + i[0], __name__), i[0]))
+        print_log("IMPORT OPERATOR", msg=i[0])
+    return out
+
+def import_nodes(path="./"):
+    out = []
+    for i in bpy.path.module_names(path + "nodes"):
+        out.append(getattr(importlib.import_module(".nodes." + i[0], __name__), i[0]))
+        print_log("IMPORT NODE", msg=i[0])
+    return out
+
 classes = [
     CMSceneProperties,
     AudioNodeTree,
-    cm_menus.CM_PT_PanelDesign,
-    cm_menus.CM_PT_PanelView,
-    cm_sockets.CM_SK_AudioNodeSocket,
-    cm_sockets.CM_SK_FloatNodeSocket,
-    cm_sockets.CM_SK_IntNodeSocket,
-    cm_sockets.CM_SK_TextNodeSocket,
-    cm_sockets.CM_SK_BoolNodeSocket,
-    cm_sockets.CM_SK_GenericNodeSocket,
-    cm_sockets.CM_SK_GenericOutNodeSocket,
-    cm_nodes.CM_ND_AudioTextNode,
-    cm_nodes.CM_ND_AudioFloatNode,
-    cm_nodes.CM_ND_AudioIntNode,
-    cm_nodes.CM_ND_AudioBoolNode,
-    cm_nodes.CM_ND_AudioFrameNode,
-    cm_nodes.CM_ND_AudioTimeNode,
-    cm_nodes.CM_ND_AudioBeatsNode,
-    cm_nodes.CM_ND_AudioInfoNode,
-    cm_nodes.CM_ND_SoundInfoNode,
-    cm_nodes.CM_ND_AudioDebugNode,
-    cm_nodes.CM_ND_AudioSoundNode,
-    cm_nodes.CM_ND_AudioChordNode,
-    cm_nodes.CM_ND_AudioFileNode,
-    cm_nodes.CM_ND_AudioOutputNode,
-    cm_nodes.CM_ND_AudioControlNode,
-    cm_nodes.CM_ND_AudioWriteNode,
-    cm_nodes.CM_ND_AudioArpeggioNode,
-    cm_filter_nodes.CM_ND_AudioAccumulatorNode,
-    cm_filter_nodes.CM_ND_AudioDelayNode,
-    cm_filter_nodes.CM_ND_AudioEchoNode,
-    cm_filter_nodes.CM_ND_AudioEnvelopeNode,
-    cm_filter_nodes.CM_ND_AudioFaderNode,
-    cm_filter_nodes.CM_ND_AudioHighpassNode,
-    cm_filter_nodes.CM_ND_AudioLimitNode,
-    cm_filter_nodes.CM_ND_AudioLoopNode,
-    cm_filter_nodes.CM_ND_AudioLowpassNode,
-    cm_filter_nodes.CM_ND_AudioPitchNode,
-    cm_filter_nodes.CM_ND_AudioVolumeNode,
-    cm_filter_nodes.CM_ND_AudioJoinNode,
-    cm_filter_nodes.CM_ND_AudioSequenceNode,
-    cm_filter_nodes.CM_ND_AudioMixNode,
-    cm_filter_nodes.CM_ND_AudioMixEightNode,
-    cm_filter_nodes.CM_ND_AudioModulateNode,
-    cm_filter_nodes.CM_ND_AudioPingPongNode,
-    cm_filter_nodes.CM_ND_AudioReverseNode,
-    cm_filter_nodes.CM_ND_AudioResampleNode,
-    cm_filter_nodes.CM_ND_AudioSlicerNode,
-    cm_operators.CM_OT_PlayAudioNodeOperator,
-    cm_operators.CM_OT_DisplayAudioNodeOperator,
-    cm_operators.CM_OT_DisplayMidiNodeOperator,
-    cm_operators.CM_OT_ExecuteStartOperator,
-    cm_operators.CM_OT_ExecuteStopOperator,
-    cm_operators.CM_OT_SetConstantsOperator,
-    cm_operators.CM_OT_SetConstantsMenu,
-    cm_operators.CM_OT_StopAudioNodeOperator,
-    cm_operators.CM_OT_WriteAudioNodeOperator,
-    cm_operators.CM_OT_impKeyb88,
-    cm_operators.CM_OT_impKeyb61,
-    cm_operators.CM_OT_impFrets,
-    cm_operators.CM_OT_renMesh,
-    cm_operators.CM_OT_UnlockView,
-    cm_operators.CM_OT_lockView,
-    cm_operators.CM_OT_MIDIStartOperator,
-    cm_operators.CM_OT_MIDIStopOperator,
-    cm_operators.CM_OT_resetAccum,
-    cm_midi_bake.CM_ND_AudioMidiBakeNode,
-    cm_midi_bake.CM_OT_LoadSoundFile,
-    cm_midi_bake.CM_OT_CreateMIDIControls,
-    cm_midi_bake.CM_OT_CreateMIDISound,
-    cm_midi_bake.CM_ND_AnalyseMidiNode,
-    cm_midi_bake.CM_OT_AnalyseMidiFile,
-    cm_objects.CM_ND_ObjectLocNode,
-    cm_objects.CM_ND_PianoRollNode,
-    cm_objects.CM_OT_EvaluatePiano,
-    cm_objects.CM_OT_EvaluateNotes,
-    cm_objects.CM_OT_GetName,
-    cm_objects.CM_OT_GetSuffix,
-    cm_objects.CM_OT_GetTarget,
-    cm_midi.CM_ND_MidiInitNode,
-    cm_midi.CM_ND_MidiAnimNode,
-    cm_midi.CM_ND_MidiNoteNode,
-    cm_midi.CM_ND_MidiHandlerNode,
-    cm_midi.CM_ND_MidiAccumNode,
-    cm_midi.CM_ND_FloatAnimNode
     ]
+
+path = repr([i for i in addon_utils.modules() if i.bl_info['name'] == "Clockworx Music"][0]).split("from '")[1].split("__init__.py'>")[0]
+sockets = import_sockets(path)
+classes.extend(sockets)
+menus = import_menus(path)
+classes.extend(menus)
+operators = import_operators(path)
+classes.extend(operators)
+nodes = import_nodes(path)
+classes.extend(nodes)
 
 
 def register():

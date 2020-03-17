@@ -91,6 +91,14 @@ def start_clock(scene):
             if (hasattr(n, "execute")):
                 n.execute()
 
+def start_piano(scene):
+    for nodetree in [
+        n for n in bpy.data.node_groups if n.rna_type.name == "Clockworx Music Editor"
+        ]:
+        for n in nodetree.nodes:
+            if (hasattr(n, "evaluate")):
+                n.evaluate()
+                
 
 def start_midi():
     """Run MIDI Function in Nodes"""
