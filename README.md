@@ -40,4 +40,4 @@ Then install the libraries (I think Windows might be python3.7m.exe)
 
 ./python3.7m -m pip install pygame
 
-### Make sure you use the ./ in fron of the python, or you will not use the local Blender Python
+### Make sure you use the ./ infront of the python, or you will not use the local Blender Python
