@@ -78,7 +78,10 @@ def get_socket_values(node, sockets, node_inputs):
             else:
                 inputs.append(None)
         else:
-            inputs.append(node_inputs[sockets[i]].value)
+            if hasattr(node_inputs[sockets[i]], "value"):
+                inputs.append(node_inputs[sockets[i]].value)
+            else:
+                inputs.append("")
     return inputs
 
 
@@ -98,7 +101,7 @@ def start_piano(scene):
         for n in nodetree.nodes:
             if (hasattr(n, "evaluate")):
                 n.evaluate()
-                
+
 
 def start_midi():
     """Run MIDI Function in Nodes"""
@@ -127,6 +130,37 @@ def off_set(values, factors):
         Euler(((x_loc * pi / 180), (y_loc * pi / 180), (z_loc * pi / 180))),
         Vector(((1 + x_loc), (1 + y_loc), (1 + z_loc)))
         )
+
+def eval_data(input_values, num):
+    cm = bpy.context.scene.cm_pg
+    if "," in input_values[-1]:
+        note_data = input_values[-1].split(",")
+        if len(note_data) == 4:
+            data = []
+            data.append(note_data[0])
+            data.append(0)
+            try:
+                data.append(float(note_data[1]))
+            except:
+                cm.message = "Invalid Input; Volume"
+                return input_values
+            if num == 6:
+                data.append(0)
+            try:
+                data.append(float(note_data[2]))
+            except:
+                cm.message = "Invalid Input; Length"
+                return input_values
+            if note_data[3] == "True":
+                data.append(True)
+            else:
+                data.append(False)
+        else:
+            cm.message = "Invalid Input Items"
+            data = input_values
+    else:
+        data = input_values
+    return data
 
 def analyse_midi_file(context):
     """Analyse MIDI File"""

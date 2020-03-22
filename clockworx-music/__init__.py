@@ -108,7 +108,6 @@ class CMSceneProperties(PropertyGroup):
     mid_c : BoolProperty(name = "Middle C = C4", default = True)
     channels : StringProperty()
     message : StringProperty(name="")
-    type_bool : BoolProperty(name="Time (True) or Beats", default=True)
     message1 : StringProperty(name="")
     col_name : StringProperty(name="Collection", default="")
     suffix_obj : StringProperty(name="Suffix", default="key")
@@ -201,17 +200,22 @@ categories = [
         NodeItem("cm_audio.beats_node"),
     ]),
     AudioIONodeCategory("AUDIO_IO_CATEGORY", "Input/Output", items = [
+        NodeItem("cm_audio.note_node"),
         NodeItem("cm_audio.sound_node"),
         NodeItem("cm_audio.chord_node"),
         NodeItem("cm_audio.arpeggio_node"),
         NodeItem("cm_audio.file_node"),
+        NodeItem("cm_audio.fm_synth"),
         NodeItem("cm_audio.output_node"),
         NodeItem("cm_audio.write_node"),
+        NodeItem("cm_audio.player_node"),
     ]),
     AudioFilterNodeCategory("AUDIO_FILTER_CATEGORY", "Filter", items = [
     # Commented out don't work with Blender < 2.8
         NodeItem("cm_audio.accumulator_node"),
+        NodeItem("cm_audio.compressor_node"),
         NodeItem("cm_audio.delay_node"),
+        NodeItem("cm_audio.doppler_node"),
         NodeItem("cm_audio.echo_node"),
         NodeItem("cm_audio.envelope_node"),
         NodeItem("cm_audio.fader_node"),
@@ -219,8 +223,10 @@ categories = [
         NodeItem("cm_audio.limit_node"),
         NodeItem("cm_audio.lowpass_node"),
         NodeItem("cm_audio.modulate_node"),
+        NodeItem("cm_audio.phaser_node"),
         NodeItem("cm_audio.pitch_node"),
         NodeItem("cm_audio.resample_node"),
+        NodeItem("cm_audio.reverb_node"),
         NodeItem("cm_audio.reverse_node"),
         NodeItem("cm_audio.volume_node"),
     ]),
@@ -235,6 +241,7 @@ categories = [
     ]),
         AudioSequenceNodeCategory("AUDIO_OBJECT_CATEGORY", "Objects", items = [
         NodeItem("cm_audio.object_loc_node"),
+        NodeItem("cm_audio.object_sound_node"),
         NodeItem("cm_audio.piano_roll_node"),
         NodeItem("cm_audio_midi_anim_node"),
         NodeItem("cm_audio_float_anim_node"),
