@@ -45,5 +45,4 @@ class CM_PT_PanelDesign(Panel):
         row = layout.row()
         row.prop(cm_pg, "sound_channels")
         row.prop(cm_pg, "mid_c")
-        layout.prop(cm_pg, "type_bool")
         layout.prop(cm_pg, "message")

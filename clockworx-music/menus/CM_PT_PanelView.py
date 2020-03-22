@@ -17,6 +17,7 @@ class CM_PT_PanelView(Panel):
         box.operator("cm_audio.impkeyb88", icon="FILE_NEW")
         box.operator("cm_audio.impkeyb61", icon="FILE_NEW")
         box.operator("cm_audio.imp_daw_objs", icon="FILE_NEW")
+        box.separator()
         box.prop(cm_pg, "bridge_len")
         box.prop(cm_pg, "scale_f")
         box.operator("cm_audio.impfrets", icon="FILE_NEW")
