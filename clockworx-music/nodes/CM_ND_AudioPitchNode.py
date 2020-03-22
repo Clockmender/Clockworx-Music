@@ -21,7 +21,8 @@ class CM_ND_AudioPitchNode(bpy.types.Node):
         layout.prop(self, "pitch_prop")
 
     def get_sound(self):
+        cm = bpy.context.scene.cm_pg
         sound = connected_node_sound(self, 0)
         if sound == None:
             return None
-        return sound.pitch(self.pitch_prop)
+        return sound.pitch(self.pitch_prop).resample(cm.samples, False)

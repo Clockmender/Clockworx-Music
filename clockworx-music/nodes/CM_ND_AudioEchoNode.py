@@ -34,10 +34,7 @@ class CM_ND_AudioEchoNode(bpy.types.Node):
         sound = sound.volume(volume)
         first = True
         for i in range(self.echo_num):
-            if cm.type_bool:
-                delay = self.time_prop * (i + 1)
-            else:
-                delay = (self.time_prop * (i + 1)) * (60 / cm.bpm)
+            delay = (self.time_prop * (i + 1)) * (60 / cm.bpm)
             volume = volume * (1 - self.factor)
             snd = sound.delay(delay).volume(volume)
             if first:

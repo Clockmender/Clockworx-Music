@@ -9,6 +9,7 @@ from ..cm_functions import (
     get_socket_values,
     get_index,
     get_freq,
+    eval_data,
     )
 
 
@@ -35,9 +36,9 @@ class CM_ND_AudioSoundNode(bpy.types.Node):
         self.inputs.new("cm_socket.text", "Note")
         self.inputs.new("cm_socket.float", "Frequency")
         self.inputs.new("cm_socket.float", "Volume")
-        self.inputs.new("cm_socket.float", "Delay (B)")
         self.inputs.new("cm_socket.float", "Length (B)")
         self.inputs.new("cm_socket.bool", "Reverse")
+        self.inputs.new("cm_socket.sound", "Note Data")
         self.outputs.new("cm_socket.sound", "Audio")
 
     def draw_buttons(self, context, layout):
@@ -49,24 +50,26 @@ class CM_ND_AudioSoundNode(bpy.types.Node):
         cm = bpy.context.scene.cm_pg
         sockets = self.inputs.keys()
         input_values = get_socket_values(self, sockets, self.inputs)
-        input_values[0] = input_values[0].split(",")
+        data = eval_data(input_values, 5)
+        if data[0] == "" and data[1] == 0:
+            return None
+
+        data[0] = data[0].split(",")
         # notes are now a list
         first = True
-        for i in range(len(input_values[0])):
-            index = get_index(input_values[0][i])
+        for i in range(len(data[0])):
+            index = get_index(data[0][i])
             if index in range(0, 107):
                 freq = get_freq(index)
             else:
                 freq = 0
             if freq > 0:
-                input_values[1] = freq
-            sound = osc_generate(input_values, self.gen_type, cm.samples)
-            sound = sound.volume(input_values[2])
-            bps = cm.bpm / 60
-            sound = sound.limit(0, (input_values[4] / bps))
-            sound = sound.delay(input_values[3] / bps)
+                data[1] = freq
+            sound = osc_generate(data, self.gen_type, cm.samples)
+            sound = sound.volume(data[2])
+            sound = sound.limit(0, (data[3] * (60 / cm.bpm)))
             sound = sound.rechannel(cm.sound_channels)
-            if input_values[5]:
+            if data[4]:
                 sound = sound.reverse()
             if first:
                 sound_out = sound

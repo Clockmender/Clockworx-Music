@@ -10,7 +10,7 @@ class CM_ND_SoundInfoNode(bpy.types.Node):
     bl_label = "Sound Info"
     bl_icon = "SPEAKER"
 
-    length : FloatProperty(name="Length", default=0)
+    length : FloatProperty(name="Length (B)", default=0)
     samples : IntProperty(name="Samples", default=0)
     channels: IntProperty(name="Channels", default=0)
 
@@ -33,8 +33,7 @@ class CM_ND_SoundInfoNode(bpy.types.Node):
         self.channels = specs[1]
         self.samples = specs[0]
         self.length = length / specs[0]
-        if not cm.type_bool:
-            self.length = self.length * (60 / cm.bpm)
+        self.length = self.length * (60 / cm.bpm)
 
     def get_sound(self):
         return connected_node_sound(self, 0)

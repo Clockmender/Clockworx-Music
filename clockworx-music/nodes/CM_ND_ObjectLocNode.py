@@ -11,7 +11,7 @@ from bpy.props import (
 
 class CM_ND_ObjectLocNode(bpy.types.Node):
     bl_idname = "cm_audio.object_loc_node"
-    bl_label = "Animate Objects"
+    bl_label = "Animate Objects from Object"
     bl_icon = "SPEAKER"
 
     control_name : StringProperty(name="Control", default="")

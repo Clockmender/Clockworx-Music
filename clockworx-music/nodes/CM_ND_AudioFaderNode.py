@@ -35,16 +35,10 @@ class CM_ND_AudioFaderNode(bpy.types.Node):
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
         sound = connected_node_sound(self, 0)
-        if cm.type_bool:
-            start_in = self.start_prop
-            length_in = self.length_prop
-            start_out = self.starto_prop
-            length_out = self.lengtho_prop
-        else:
-            start_in = self.start_prop * (60 / cm.bpm)
-            length_in = self.length_prop * (60 / cm.bpm)
-            start_out = self.starto_prop * (60 / cm.bpm)
-            length_out = self.lengtho_prop * (60 / cm.bpm)
+        start_in = self.start_prop * (60 / cm.bpm)
+        length_in = self.length_prop * (60 / cm.bpm)
+        start_out = self.starto_prop * (60 / cm.bpm)
+        length_out = self.lengtho_prop * (60 / cm.bpm)
         if sound == None:
             return None
         if self.fade_in_prop:

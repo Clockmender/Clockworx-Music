@@ -9,6 +9,7 @@ from ..cm_functions import (
     osc_generate,
     get_socket_values,
     get_chord,
+    eval_data,
     )
 
 
@@ -36,6 +37,7 @@ class CM_ND_AudioArpeggioNode(bpy.types.Node):
         self.inputs.new("cm_socket.float", "Volume")
         self.inputs.new("cm_socket.float", "Length (B)")
         self.inputs.new("cm_socket.bool", "Reverse")
+        self.inputs.new("cm_socket.sound", "Note Data")
         self.outputs.new("cm_socket.sound", "Audio")
 
     def draw_buttons(self, context, layout):
@@ -46,18 +48,22 @@ class CM_ND_AudioArpeggioNode(bpy.types.Node):
         cm = bpy.context.scene.cm_pg
         sockets = self.inputs.keys()
         input_values = get_socket_values(self, sockets, self.inputs)
-        freq_list = get_chord(input_values[0], self.num_notes)
-        bps = cm.bpm / 60
-        duration = input_values[2] * (1 / bps)
-        if input_values[3]:
+        input_values.insert(1, 0)
+        data = eval_data(input_values, 5)
+        if data[0] == "" and data[1] == 0:
+            return None
+
+        freq_list = get_chord(data[0], self.num_notes)
+        duration = data[3] * (60 / cm.bpm)
+        if data[4]:
             freq_list = freq_list[::-1]
         for r in range(len(freq_list)):
             snd = osc_generate([0, freq_list[r]], self.gen_type, cm.samples)
-            snd = snd.limit(0, duration).volume(input_values[1])
+            snd = snd.limit(0, duration).volume(data[2])
             if r == 0:
                 sound = snd
             else:
                 sound = sound.join(snd)
-        if input_values[3]:
+        if data[4]:
             sound = sound.reverse()
         return sound

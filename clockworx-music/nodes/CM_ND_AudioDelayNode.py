@@ -25,8 +25,5 @@ class CM_ND_AudioDelayNode(bpy.types.Node):
         sound = connected_node_sound(self, 0)
         if sound == None:
             return None
-        if cm.type_bool:
-            delay = self.time_prop
-        else:
-            delay = self.time_prop * (60 / cm.bpm)
+        delay = self.time_prop * (60 / cm.bpm)
         return sound.delay(delay)
