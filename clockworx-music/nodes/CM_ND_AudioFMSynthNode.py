@@ -10,6 +10,7 @@ from bpy.props import (
 from ..cm_functions import (
     osc_generate,
     get_socket_values,
+    connected_node_output,
     get_index,
     get_note,
     get_freq,
@@ -66,30 +67,6 @@ class CM_ND_AudioFMSynthNode(bpy.types.Node):
     sto3      : FloatProperty(name="Del 3",default=0,min=0,max=1)
     sto4      : FloatProperty(name="Del 4",default=0,min=0,max=1)
 
-    # Object bits:
-    control_name : StringProperty(name="Control", default="")
-    anim_type: EnumProperty(
-        items=(
-        ("loc", "Location", "Animate Location"),
-          ("rot", "Rotation", "Animate Rotation"),
-          ("scl", "Scale", "Animate Scale"),
-        ),
-        name="Animate:",
-        default="loc",
-        description="Animation Type",
-        )
-    control_axis : EnumProperty(
-        items=(
-          ("0", "X Axis", "X Axis"),
-          ("1", "Y Axis", "Y Axis"),
-          ("2", "Z Axis", "Z Axis"),
-        ),
-        name="Axis",
-        default="0",
-        description="Contol Axis",
-        )
-    trigger_value : FloatProperty(name="Trigger Value", default=1.0)
-
     def draw_buttons(self, context, layout):
         row = layout.row()
         col1 = row.column()
@@ -116,14 +93,6 @@ class CM_ND_AudioFMSynthNode(bpy.types.Node):
         col4.prop(self, "dir4")
 
         layout.label(text=self.message,icon="NONE")
-        box = layout.box()
-        row = box.row()
-        row.prop(self, "control_name")
-        row.operator("cm_audio.get_name", text="", icon="STYLUS_PRESSURE")
-        row.prop(self, "anim_type")
-        row = box.row()
-        row.prop(self, "control_axis")
-        row.prop(self, "trigger_value")
 
     def init(self, context):
         self.inputs.new("cm_socket.text", "Note") # 0
@@ -131,36 +100,40 @@ class CM_ND_AudioFMSynthNode(bpy.types.Node):
         self.inputs.new("cm_socket.float", "Master Volume") # 2
         self.inputs.new("cm_socket.float", "Length (B)") # 3
         self.inputs.new("cm_socket.bool", "Reverse") # 4
-        self.inputs.new("cm_socket.sound", "Note Data")
+        self.inputs.new("cm_socket.generic", "Note Data")
         self.outputs.new("cm_socket.sound", "Audio")
 
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
         sockets = self.inputs.keys()
         input_values = get_socket_values(self, sockets, self.inputs)
-        data = eval_data(input_values, 5)
-        obj = bpy.data.objects.get(self.control_name)
-        if obj is not None:
-            if "_" in obj.name:
-                if self.anim_type == "loc":
-                    value_obj = obj.location[int(self.control_axis)]
-                elif self.anim_type == "rot":
-                    value_obj = obj.rotation_euler[int(self.control_axis)]
-                else:
-                    value_obj = obj.scale[int(self.control_axis)]
-                    
-                if value_obj == self.trigger_value:
-                    note_name = obj.name.split("_")[0]
-                    data[0] = note_name
-
-        vol1 = self.vol1 * data[2]
-        vol2 = self.vol2 * data[2]
-        vol3 = self.vol3 * data[2]
-        vol4 = self.vol4 * data[2]
-        if data[0] == "" and data[1] == 0:
-            sound_out = None
+        input = connected_node_output(self, 5)
+        if input is None:
+            output = {}
+            output["note_name"] = input_values[0]
+            output["note_freq"] = input_values[1]
+            output["note_vol"] = input_values[2]
+            output["note_dur"] = input_values[3]
+            output["note_rev"] = input_values[4]
+            input = [output]
         else:
+            if isinstance(input, dict):
+                input = [input]
+
+        first = True
+        sound_out = None
+        for notes in input:
+            data = eval_data(notes)
+            if data[0] == "" and data[1] == 0:
+                return None
+            vol1 = self.vol1 * data[2]
+            vol2 = self.vol2 * data[2]
+            vol3 = self.vol3 * data[2]
+            vol4 = self.vol4 * data[2]
             bps = cm.bpm / 60
+            if data[0] == "":
+                cm.message = "You MUST Give a Note Name"
+                return None
             index = get_index(data[0])
             note_name = get_note(index, 0)
             freq_list = get_chord(note_name, -4)
@@ -186,8 +159,17 @@ class CM_ND_AudioFMSynthNode(bpy.types.Node):
             sound_4 = sound_4.delay(self.sto4)
             sound_4 = sound_1.modulate(sound_4)
 
-            sound_out = sound_1.mix(sound_2).mix(sound_3).mix(sound_4)
-            sound_out = sound_out.volume(data[2]).rechannel(cm.sound_channels)
-            if input_values[4]:
-                sound_out = sound_out.reverse()
-        return sound_out
+            sound_list = sound_1.mix(sound_2).mix(sound_3).mix(sound_4)
+            sound_list = sound_list.volume(data[2]).rechannel(cm.sound_channels)
+            if data[4]:
+                sound_list = sound_list.reverse()
+            if first:
+                sound_out = sound_list
+                first = False
+            else:
+                sound_out = sound_out.mix(sound_list)
+
+        return {"sound": sound_out}
+
+    def output(self):
+        return self.get_sound()

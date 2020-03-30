@@ -14,7 +14,7 @@ class CM_ND_FloatAnimNode(bpy.types.Node):
     bl_idname = "cm_audio_float_anim_node"
     bl_label = "Float Object Animate"
     bl_width_default = 150
-    """Animate One Object from FLoat Data"""
+    """Animate One Object from Float Data"""
 
     object_name : StringProperty(name="Object", default="")
     factors : FloatVectorProperty(name="", subtype="XYZ", default=(1,1,1))

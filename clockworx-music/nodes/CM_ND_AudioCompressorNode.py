@@ -49,23 +49,27 @@ class CM_ND_AudioCompressorNode(bpy.types.Node):
         layout.prop(self,"qhfac3")
 
     def get_sound(self):
-        sound = connected_node_sound(self, 0)
-        if sound == None:
-            return None
-        if (
-            any([self.qlfac1 == 0, self.qlfac2 == 0, self.qlfac3 == 0,
-            self.qhfac1 == 0,self.qhfac2 == 0, self.qhfac2 == 0])
-            ):
-            return None
-        else:
-            # first LowPass
-            sound = sound.lowpass(self.low1, self.qlfac1)
-            # first BandPass
-            sound = sound.lowpass(self.low2, self.qlfac2)
-            sound = sound.highpass(self.high1, self.qhfac1)
-            # second BandPass
-            sound = sound.lowpass(self.low3, self.qlfac3)
-            sound = sound.highpass(self.high2, self.qhfac2)
-            # final HighPass
-            sound = sound.highpass(self.high3, self.qhfac3)
-        return sound
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+                if isinstance(sound, aud.Sound):
+                    if (
+                        all([self.qlfac1 > 0, self.qlfac2 > 0, self.qlfac3 > 0,
+                        self.qhfac1 > 0,self.qhfac2 > 0, self.qhfac2 > 0])
+                        ):
+                        # first LowPass
+                        sound = sound.lowpass(self.low1, self.qlfac1)
+                        # first BandPass
+                        sound = sound.lowpass(self.low2, self.qlfac2)
+                        sound = sound.highpass(self.high1, self.qhfac1)
+                        # second BandPass
+                        sound = sound.lowpass(self.low3, self.qlfac3)
+                        sound = sound.highpass(self.high2, self.qhfac2)
+                        # final HighPass
+                        sound = sound.highpass(self.high3, self.qhfac3)
+                    return {"sound": sound}
+        return None
+
+    def output(self):
+        return self.get_sound()

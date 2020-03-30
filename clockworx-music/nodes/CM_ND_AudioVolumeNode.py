@@ -21,7 +21,14 @@ class CM_ND_AudioVolumeNode(bpy.types.Node):
         layout.prop(self, "volume_prop")
 
     def get_sound(self):
-        sound = connected_node_sound(self, 0)
-        if sound == None:
-            return None
-        return sound.volume(self.volume_prop)
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+                if isinstance(sound, aud.Sound):
+                    sound = sound.volume(self.volume_prop)
+                    return {"sound": sound}
+        return None
+
+    def output(self):
+        return self.get_sound()

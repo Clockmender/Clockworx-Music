@@ -112,3 +112,8 @@ class CM_ND_MidiAnimNode(bpy.types.Node):
                         tgt_obj.delta_scale = scale_delta
 
         return [cm.midi_data["notes"], cm.midi_data["params"]]
+
+
+    def output(self):
+        output = self.get_midi()
+        return {"MIDI Handler": output}

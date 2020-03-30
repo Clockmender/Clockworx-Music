@@ -7,7 +7,7 @@ from ..cm_functions import (
 
 class CM_ND_AudioFaderNode(bpy.types.Node):
     bl_idname = "cm_audio.fader_node"
-    bl_label = "Fader by Time/Beats"
+    bl_label = "Fader"
     bl_icon = "SPEAKER"
 
     start_prop : bpy.props.FloatProperty(name="Start In", default=0, soft_min=0)
@@ -34,15 +34,23 @@ class CM_ND_AudioFaderNode(bpy.types.Node):
 
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
-        sound = connected_node_sound(self, 0)
-        start_in = self.start_prop * (60 / cm.bpm)
-        length_in = self.length_prop * (60 / cm.bpm)
-        start_out = self.starto_prop * (60 / cm.bpm)
-        length_out = self.lengtho_prop * (60 / cm.bpm)
-        if sound == None:
-            return None
-        if self.fade_in_prop:
-            sound = sound.fadein(start_in, length_in)
-        if self.fade_out_prop:
-            sound = sound.fadeout(start_out, length_out)
-        return sound
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+                if isinstance(sound, aud.Sound):
+                    start_in = self.start_prop * (60 / cm.bpm)
+                    length_in = self.length_prop * (60 / cm.bpm)
+                    start_out = self.starto_prop * (60 / cm.bpm)
+                    length_out = self.lengtho_prop * (60 / cm.bpm)
+                    if sound == None:
+                        return None
+                    if self.fade_in_prop:
+                        sound = sound.fadein(start_in, length_in)
+                    if self.fade_out_prop:
+                        sound = sound.fadeout(start_out, length_out)
+                    return {"sound": sound}
+        return None
+
+    def output(self):
+        return self.get_sound()

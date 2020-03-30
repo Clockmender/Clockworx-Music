@@ -8,7 +8,7 @@ from ..cm_functions import (
 
 class CM_ND_AudioJoinNode(bpy.types.Node):
     bl_idname = "cm_audio.join_node"
-    bl_label = "Simple Join"
+    bl_label = "Join"
     bl_icon = "SPEAKER"
 
     def init(self, context):
@@ -17,8 +17,17 @@ class CM_ND_AudioJoinNode(bpy.types.Node):
         self.outputs.new("cm_socket.sound", "Audio")
 
     def get_sound(self):
-        sound1 = connected_node_sound(self, 0)
-        sound2 = connected_node_sound(self, 1)
-        if sound1 == None or sound2 == None:
-            return None
-        return sound1.join(sound2)
+        input1 = connected_node_sound(self, 0)
+        input2 = connected_node_sound(self, 1)
+        if isinstance(input1, dict) and isinstance(input2, dict):
+            if "sound" in input1.keys():
+                sound1 = input1["sound"]
+            if "sound" in input2.keys():
+                sound2 = input2["sound"]
+            if isinstance(sound1, aud.Sound) and isinstance(sound2, aud.Sound):
+                sound = sound1.join(sound2)
+                return {"sound": sound}
+        return None
+
+    def output(self):
+        return self.get_sound()

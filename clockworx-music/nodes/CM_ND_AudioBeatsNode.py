@@ -11,13 +11,13 @@ class CM_ND_AudioBeatsNode(bpy.types.Node):
     def init(self, context):
         self.outputs.new("cm_socket.float", "Beats")
 
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "beats_num")
-
     def execute(self):
         cm = bpy.context.scene.cm_pg
         bps = cm.bpm / 60
         fps = bpy.context.scene.render.fps / bpy.context.scene.render.fps_base
         frame = bpy.context.scene.frame_current
         self.beats_num = round((((frame - cm.offset) / fps) * bps), 3)
-        return self.beats_num
+        return {"beats": self.beats_num}
+
+    def output(self):
+        return self.execute()

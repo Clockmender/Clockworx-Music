@@ -16,7 +16,14 @@ class CM_ND_AudioPingPongNode(bpy.types.Node):
         self.outputs.new("cm_socket.sound", "Audio")
 
     def get_sound(self):
-        sound = connected_node_sound(self, 0)
-        if sound == None:
-            return None
-        return sound.pingpong()
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+                if isinstance(sound, aud.Sound):
+                    sound = sound.pingpong()
+                    return {"sound": sound}
+        return None
+
+    def output(self):
+        return self.get_sound()

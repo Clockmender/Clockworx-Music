@@ -5,8 +5,8 @@ from bpy.props import (
     )
 
 class CM_ND_MidiAnalyseNode(bpy.types.Node):
-    bl_idname = "cm_audio.analyse_midi_node"
-    bl_label = "Clockworx MIDI Analyser"
+    bl_idname = "cm_audio.midi_analyse_node"
+    bl_label = "MIDI Analyser"
     bl_icon = "SPEAKER"
 
     midi_file_name : StringProperty(subtype="FILE_PATH", name="Midi CSV file", default="//")
@@ -20,7 +20,7 @@ class CM_ND_MidiAnalyseNode(bpy.types.Node):
 
 
     def init(self, context):
-        self.outputs.new("cm_socket.sound", "File Info")
+        self.outputs.new("cm_socket.generic", "File Info")
 
     def draw_buttons(self, context, layout):
         cm_pg = context.scene.cm_pg
@@ -36,6 +36,6 @@ class CM_ND_MidiAnalyseNode(bpy.types.Node):
         layout.prop(self, "tracks")
         layout.operator("cm_audio.analyse_midi", text="Analyse File")
 
-    def info(self,context):
-        cm = context.scene.cm_pg
+    def output(self):
+        cm = bpy.context.scene.cm_pg
         return cm.data_dict

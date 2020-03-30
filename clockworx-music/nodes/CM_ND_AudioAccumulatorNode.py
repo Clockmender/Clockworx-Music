@@ -20,7 +20,14 @@ class CM_ND_AudioAccumulatorNode(bpy.types.Node):
         layout.prop(self, "additive_prop")
 
     def get_sound(self):
-        sound = connected_node_sound(self, 0)
-        if sound == None:
-            return None
-        return sound.accumulate(self.additive_prop)
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+                if isinstance(sound, aud.Sound):
+                    sound = sound.accumulate(self.additive_prop)
+                    return {"sound": sound}
+        return None
+
+    def output(self):
+        return self.get_sound()

@@ -113,6 +113,9 @@ class CMSceneProperties(PropertyGroup):
     suffix_obj : StringProperty(name="Suffix", default="key")
     bridge_len : FloatProperty(name = "Bridge Length", min=0.5,max=1.0)
     scale_f : FloatProperty(name = "Scale Factor", min=0.5, max=1)
+    pointer : StringProperty(name="Pointer", default="Pointer",
+        description='Name of Pointer Object')
+    view_offset : FloatProperty(name="Pointer - View Offset", default=2)
 
     data_dict = {}
     event_dict = {}
@@ -159,6 +162,11 @@ class AudioIONodeCategory(NodeCategory):
     def poll(cls, context):
         return context.space_data.tree_type == "cm_AudioNodeTree"
 
+class AudioOSCNodeCategory(NodeCategory):
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == "cm_AudioNodeTree"
+
 
 class AudioFilterNodeCategory(NodeCategory):
     @classmethod
@@ -178,39 +186,44 @@ class AudioObjectNodeCategory(NodeCategory):
 
 
 categories = [
-        AudioIONodeCategory("AUDIO_SETUP_CATEGORY", "Setup", items = [
-        #NodeItem("cm_audio.control_node"),
-        NodeItem("cm_audio.analyse_midi_node"),
+    AudioIONodeCategory("AUDIO_SETUP_CATEGORY", "Setup", items = [
+        NodeItem("cm_audio.midi_analyse_node"),
         NodeItem("cm_audio.midi_bake_node"),
         NodeItem("cm_audio_midi_init_node"),
-        NodeItem("cm_audio_midi_midi_handler"),
         NodeItem("cm_audio_midi_accum"),
+        NodeItem("cm_audio_midi_midi_handler"),
     ]),
-        AudioIONodeCategory("AUDIO_PROP_CATEGORY", "Constants/Info", items = [
-        NodeItem("cm_audio.text_node"),
+    AudioPropertiesNodeCategory("AUDIO_PROP_CATEGORY", "Constants & Info", items = [
+        NodeItem("cm_audio.beats_node"),
+        NodeItem("cm_audio.debug_node"),
+        NodeItem("cm_audio.frame_node"),
+        NodeItem("cm_audio.info_node"),
+        NodeItem("cm_audio.midi_note_node"),
+        NodeItem("cm_audio.sound_info_node"),
+        NodeItem("cm_audio.time_node"),
+    ]),
+    AudioIONodeCategory("AUDIO_IO_CATEGORY", "Inputs & Outputs", items = [
+        NodeItem("cm_audio.bool_node"),
         NodeItem("cm_audio.float_node"),
         NodeItem("cm_audio.int_node"),
-        NodeItem("cm_audio.bool_node"),
-        NodeItem("cm_audio.debug_node"),
-        NodeItem("cm_audio.info_node"),
-        NodeItem("cm_audio.sound_info_node"),
-        NodeItem("cm_audio.midi_note_node"),
-        NodeItem("cm_audio.frame_node"),
-        NodeItem("cm_audio.time_node"),
-        NodeItem("cm_audio.beats_node"),
-    ]),
-    AudioIONodeCategory("AUDIO_IO_CATEGORY", "Input/Output", items = [
+        NodeItem("cm_audio.text_node"),
         NodeItem("cm_audio.note_node"),
-        NodeItem("cm_audio.sound_node"),
-        NodeItem("cm_audio.chord_node"),
-        NodeItem("cm_audio.arpeggio_node"),
+        NodeItem("cm_audio.object_note_node"),
         NodeItem("cm_audio.file_node"),
-        NodeItem("cm_audio.fm_synth"),
-        NodeItem("cm_audio.output_node"),
-        NodeItem("cm_audio.write_node"),
         NodeItem("cm_audio.player_node"),
+        NodeItem("cm_audio.output_node"),
+        NodeItem("cm_audio.object_sound_node"),
+        NodeItem("cm_audio.write_node"),
+        NodeItem("cm_audio.collections_node"),
+        NodeItem("cm_audio.objects_node"),
     ]),
-    AudioFilterNodeCategory("AUDIO_FILTER_CATEGORY", "Filter", items = [
+    AudioOSCNodeCategory("AUDIO_OSC_CATEGORY", "Oscillators", items = [
+        NodeItem("cm_audio.arpeggio_node"),
+        NodeItem("cm_audio.chord_node"),
+        NodeItem("cm_audio.fm_synth"),
+        NodeItem("cm_audio.sound_node"),
+    ]),
+    AudioFilterNodeCategory("AUDIO_FILTER_CATEGORY", "Filters", items = [
     # Commented out don't work with Blender < 2.8
         NodeItem("cm_audio.accumulator_node"),
         NodeItem("cm_audio.compressor_node"),
@@ -218,8 +231,10 @@ categories = [
         NodeItem("cm_audio.doppler_node"),
         NodeItem("cm_audio.echo_node"),
         NodeItem("cm_audio.envelope_node"),
+        NodeItem("cm_audio.equaliser_node"),
         NodeItem("cm_audio.fader_node"),
         NodeItem("cm_audio.highpass_node"),
+        NodeItem("cm_audio.iir_fir_node"),
         NodeItem("cm_audio.limit_node"),
         NodeItem("cm_audio.lowpass_node"),
         NodeItem("cm_audio.modulate_node"),
@@ -228,23 +243,23 @@ categories = [
         NodeItem("cm_audio.resample_node"),
         NodeItem("cm_audio.reverb_node"),
         NodeItem("cm_audio.reverse_node"),
+        NodeItem("cm_audio.separator_node"),
         NodeItem("cm_audio.volume_node"),
     ]),
-    AudioSequenceNodeCategory("AUDIO_SEQUENCE_CATEGORY", "Sequence", items = [
-        NodeItem("cm_audio.join_node"),
+    AudioSequenceNodeCategory("AUDIO_SEQUENCE_CATEGORY", "Sequences", items = [
+        NodeItem("cm_audio.mix_eight_node"),
         NodeItem("cm_audio.sequence_node"),
+        NodeItem("cm_audio.slicer_node"),
+        NodeItem("cm_audio.join_node"),
         NodeItem("cm_audio.loop_node"),
         NodeItem("cm_audio.mix_node"),
-        NodeItem("cm_audio.mix_eight_node"),
         NodeItem("cm_audio.pingpong_node"),
-        NodeItem("cm_audio.slicer_node"),
     ]),
-        AudioSequenceNodeCategory("AUDIO_OBJECT_CATEGORY", "Objects", items = [
+    AudioSequenceNodeCategory("AUDIO_OBJECT_CATEGORY", "Objects", items = [
         NodeItem("cm_audio.object_loc_node"),
-        NodeItem("cm_audio.object_sound_node"),
         NodeItem("cm_audio.piano_roll_node"),
-        NodeItem("cm_audio_midi_anim_node"),
         NodeItem("cm_audio_float_anim_node"),
+        NodeItem("cm_audio_midi_anim_node"),
     ]),
 ]
 

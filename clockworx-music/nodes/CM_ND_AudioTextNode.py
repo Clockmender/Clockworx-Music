@@ -13,5 +13,5 @@ class CM_ND_AudioTextNode(bpy.types.Node):
     def draw_buttons(self, context, layout):
         layout.prop(self, "text_input", text="")
 
-    def get_sound(self):
-        return self.text_input
+    def output(self):
+        return {"out1": self.text_input}

@@ -1,4 +1,5 @@
 import bpy
+import aud
 from bpy.props import (
    StringProperty,
    IntProperty,
@@ -10,8 +11,9 @@ from ..cm_functions import connected_node_sound
 
 class CM_ND_AudioWriteNode(bpy.types.Node):
     bl_idname = "cm_audio.write_node"
-    bl_label = "Play/Write Sound"
+    bl_label = "Speaker: Play/Write"
     bl_icon = "SPEAKER"
+    bl_width_default = 180
 
     write_name : StringProperty(subtype="FILE_PATH", name="Ouptut File Name", default="//")
     sequence_channel : IntProperty(name="Channel", default=1)
@@ -24,8 +26,15 @@ class CM_ND_AudioWriteNode(bpy.types.Node):
         self.inputs.new("cm_socket.sound", "Audio")
 
     def get_sound(self):
-        sound = connected_node_sound(self, 0)
-        return sound
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+            else:
+                sound = None
+            return sound
+        else:
+            return None
 
     def draw_buttons(self, context, layout):
         layout.context_pointer_set("audionode", self)

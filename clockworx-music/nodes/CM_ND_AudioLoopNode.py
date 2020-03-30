@@ -22,7 +22,14 @@ class CM_ND_AudioLoopNode(bpy.types.Node):
         layout.prop(self, "loop_prop")
 
     def get_sound(self):
-        sound = connected_node_sound(self, 0)
-        if sound == None:
-            return None
-        return sound.loop(self.loop_prop)
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+                if isinstance(sound, aud.Sound):
+                    sound = sound.loop(self.loop_prop)
+                    return {"sound": sound}
+        return None
+
+    def output(self):
+        return self.get_sound()

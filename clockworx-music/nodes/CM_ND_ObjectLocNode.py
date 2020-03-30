@@ -7,14 +7,13 @@ from bpy.props import (
     StringProperty,
     BoolProperty,
 )
-
+from ..cm_functions import connected_node_output
 
 class CM_ND_ObjectLocNode(bpy.types.Node):
     bl_idname = "cm_audio.object_loc_node"
     bl_label = "Animate Objects from Object"
     bl_icon = "SPEAKER"
 
-    control_name : StringProperty(name="Control", default="")
     factor_x : FloatProperty(name="Factor X", default=1)
     factor_y : FloatProperty(name="Factor Y", default=1)
     factor_z : FloatProperty(name="Factor Z", default=1)
@@ -36,13 +35,9 @@ class CM_ND_ObjectLocNode(bpy.types.Node):
         description="Animation Type",
     )
 
-
     def draw_buttons(self, context, layout):
         box = layout.box()
         box.prop(self, "anim_type")
-        row = box.row()
-        row.prop(self, "control_name")
-        row.operator("cm_audio.get_name", text="", icon="STYLUS_PRESSURE")
         row = box.row()
         box.prop(self, "factor_x")
         box.prop(self, "factor_y")
@@ -56,11 +51,14 @@ class CM_ND_ObjectLocNode(bpy.types.Node):
         row.operator("cm_audio.get_target", text="", icon="STYLUS_PRESSURE")
         layout.label(text="")
         box = layout.box()
-        box.prop(self, "message", text="")
+        layout.label(text=self.message, icon="INFO")
         box.prop(self, "animate_group")
         row = box.row()
         row.prop(self, "suffix")
         row.operator("cm_audio.get_suffix", text="", icon="STYLUS_PRESSURE")
+
+    def init(self, context):
+        self.inputs.new("cm_socket.object", "Object")
 
     def execute(self):
         def off_set(obj):
@@ -80,7 +78,19 @@ class CM_ND_ObjectLocNode(bpy.types.Node):
                 Vector(((1 + x_loc), (1 + y_loc), (1 + z_loc)))
                 )
 
-        if not self.animate_group:
+        input = connected_node_output(self, 0)
+        tgt_obj = None
+        if isinstance(input, dict):
+            if isinstance(input, dict):
+                objects = []
+                if "objects" in input.keys():
+                    objects = input["objects"]
+                    if not isinstance(objects, list):
+                        objects = [objects]
+                    if len(objects) == 1:
+                        tgt_obj = objects[0]
+
+        if not self.animate_group and tgt_obj is not None:
             self.message = "List Function Inactive"
             obj = bpy.data.objects[self.control_name]
             if obj is not None:
@@ -94,8 +104,8 @@ class CM_ND_ObjectLocNode(bpy.types.Node):
                     else:
                         tgt_obj.delta_scale = scale_delta
 
-        else:
-            search = self.control_name.split("_")[1]
+        elif self.animate_group and tgt_obj is not None:
+            search = tgt_obj.name.split("_")[1]
             self.message = f"Using: '{search}' to find Controls"
             objs_list = ([o for o in bpy.data.objects
                 if len(o.name.split("_")) == 2

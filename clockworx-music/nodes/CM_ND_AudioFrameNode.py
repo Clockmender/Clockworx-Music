@@ -11,9 +11,9 @@ class CM_ND_AudioFrameNode(bpy.types.Node):
     def init(self, context):
         self.outputs.new("cm_socket.int", "Frame")
 
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "frame_num")
-
     def execute(self):
         self.frame_num = bpy.context.scene.frame_current
-        return self.frame_num
+        return {"frame_no": self.frame_num}
+
+    def output(self):
+        return self.execute()

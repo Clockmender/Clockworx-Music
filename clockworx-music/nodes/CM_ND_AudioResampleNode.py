@@ -23,7 +23,14 @@ class CM_ND_AudioResampleNode(bpy.types.Node):
 
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
-        sound = connected_node_sound(self, 0)
-        if sound == None:
-          return None
-        return sound.resample(cm.samples, self.qual_bool)
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+                if isinstance(sound, aud.Sound):
+                    sound = sound.resample(cm.samples, self.qual_bool)
+                    return {"sound": sound}
+        return None
+
+    def output(self):
+        return self.get_sound()

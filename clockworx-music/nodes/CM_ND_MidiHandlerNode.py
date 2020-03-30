@@ -22,20 +22,27 @@ class CM_ND_MidiHandlerNode(bpy.types.Node):
     def get_midi(self):
         cm = bpy.context.scene.cm_pg
         buffer_in = connected_node_midi(self, 0)
-        for b in buffer_in:
-            #if there is data
-            if len(b) > 0 and len(b[0]) > 0:
-                if b[0][0] == 144:
-                    if self.velocity == -1:
-                        cm.midi_data["notes"][b[0][1]] = b[0][2]
-                    elif b[0][2] == 0:
-                        cm.midi_data["notes"][b[0][1]] = 0
-                    else:
-                        cm.midi_data["notes"][b[0][1]] = self.velocity
-                elif b[0][0] == 176:
-                    cm.midi_data["params"][b[0][1]] = b[0][2]
+        if buffer_in is not None:
+            for b in buffer_in:
+                #if there is data
+                if len(b) > 0 and len(b[0]) > 0:
+                    if b[0][0] == 144:
+                        if self.velocity == -1:
+                            cm.midi_data["notes"][b[0][1]] = b[0][2]
+                        elif b[0][2] == 0:
+                            cm.midi_data["notes"][b[0][1]] = 0
+                        else:
+                            cm.midi_data["notes"][b[0][1]] = self.velocity
+                    elif b[0][0] == 176:
+                        cm.midi_data["params"][b[0][1]] = b[0][2]
 
-        if cm.midi_debug:
-            print(str(cm.midi_data["notes"]))
-            print(str(cm.midi_data["params"]))
-        return [cm.midi_data["notes"], cm.midi_data["params"]]
+            if cm.midi_debug:
+                print(str(cm.midi_data["notes"]))
+                print(str(cm.midi_data["params"]))
+            return [cm.midi_data["notes"], cm.midi_data["params"]]
+        else:
+            return None
+
+    def output(self):
+        output = self.get_midi()
+        return {"MIDI Handler": output}

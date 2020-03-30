@@ -8,9 +8,9 @@ from bpy.props import (
     )
 
 
-class CM_ND_AudioMidiBakeNode(bpy.types.Node):
+class CM_ND_MidiBakeNode(bpy.types.Node):
     bl_idname = "cm_audio.midi_bake_node"
-    bl_label = "Clockworx MIDI Bake"
+    bl_label = "MIDI Bake"
     bl_icon = "SPEAKER"
 
     use_vel : BoolProperty(name="Use MIDI Velocity", default=False)
@@ -88,6 +88,6 @@ class CM_ND_AudioMidiBakeNode(bpy.types.Node):
 
         layout.label(text="")
         if self.message1 != "":
-            layout.prop(self, "message1", text="")
+            layout.label(text=self.message1, icon="INFO")
         if self.message2 != "":
-            layout.prop(self, "message2", text="")
+            layout.label(text=self.message2, icon="INFO")

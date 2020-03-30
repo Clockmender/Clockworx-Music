@@ -16,7 +16,14 @@ class CM_ND_AudioReverseNode(bpy.types.Node):
         self.outputs.new("cm_socket.sound", "Audio")
 
     def get_sound(self):
-        sound = connected_node_sound(self, 0)
-        if sound == None:
-          return None
-        return sound.reverse()
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+                if isinstance(sound, aud.Sound):
+                    sound = sound.reverse()
+                    return {"sound": sound}
+        return None
+
+    def output(self):
+        return self.get_sound()

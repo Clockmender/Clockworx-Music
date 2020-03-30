@@ -26,8 +26,15 @@ class CM_ND_AudioEnvelopeNode(bpy.types.Node):
         layout.prop(self, "arthreshold_prop")
 
     def get_sound(self):
-        sound = connected_node_sound(self, 0)
-        if sound == None:
-            return None
-        return sound.envelope(self.attack_prop, self.release_prop,
-            self.threshold_prop, self.arthreshold_prop)
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+                if isinstance(sound, aud.Sound):
+                    sound = sound.envelope(self.attack_prop, self.release_prop,
+                        self.threshold_prop, self.arthreshold_prop)
+                    return {"sound": sound}
+        return None
+
+    def output(self):
+        return self.get_sound()

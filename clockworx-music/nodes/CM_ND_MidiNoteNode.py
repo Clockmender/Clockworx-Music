@@ -11,7 +11,7 @@ from ..cm_functions import (
 
 class CM_ND_MidiNoteNode(bpy.types.Node):
     bl_idname = "cm_audio.midi_note_node"
-    bl_label = "Midi Key Info"
+    bl_label = "MIDI Key Info"
     bl_icon = "SPEAKER"
 
     midi_type : IntProperty(name="Type", default=0)
@@ -32,15 +32,18 @@ class CM_ND_MidiNoteNode(bpy.types.Node):
     def get_midi(self):
         cm = bpy.context.scene.cm_pg
         buffer_in = connected_node_midi(self, 0)
-        buffer1 = buffer_in[0]
-        if len(buffer_in[0]) > 0:
-            self.midi_type = buffer1[0][0]
-            self.midi_id = buffer1[0][1]
-            self.midi_value = buffer1[0][2] / 127
-            output = ([cm.midi_buffer["buffer1"][0][0],
-                cm.midi_buffer["buffer1"][0][1],
-                cm.midi_buffer["buffer1"][0][2] / 127
-                ])
+        if buffer_in is not None:
+            buffer1 = buffer_in[0]
+            if len(buffer_in[0]) > 0:
+                self.midi_type = buffer1[0][0]
+                self.midi_id = buffer1[0][1]
+                self.midi_value = buffer1[0][2] / 127
+                output = ([cm.midi_buffer["buffer1"][0][0],
+                    cm.midi_buffer["buffer1"][0][1],
+                    cm.midi_buffer["buffer1"][0][2] / 127
+                    ])
+                return output
+            else:
+                return None
         else:
-            output = [0,0,0]
-        return output
+            return None

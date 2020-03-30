@@ -8,7 +8,7 @@ from ..cm_functions import (
 
 class CM_ND_AudioLimitNode(bpy.types.Node):
     bl_idname = "cm_audio.limit_node"
-    bl_label = "Limit by Time/Beats"
+    bl_label = "Limit"
     bl_icon = "SPEAKER"
 
     start_prop : bpy.props.FloatProperty(name="Start (B)", default=0, soft_min=0)
@@ -26,9 +26,16 @@ class CM_ND_AudioLimitNode(bpy.types.Node):
 
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
-        sound = connected_node_sound(self, 0)
-        start = self.start_prop * (60 / cm.bpm)
-        length = self.end_prop * (60 / cm.bpm)
-        if sound == None or self.start_prop >= self.end_prop:
-            return None
-        return sound.limit(start, length)
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+                if isinstance(sound, aud.Sound) and self.start_prop >= self.end_prop:
+                    start = self.start_prop * (60 / cm.bpm)
+                    length = self.end_prop * (60 / cm.bpm)
+                    sound = sound.limit(start, length)
+                    return {"sound": sound}
+        return None
+
+    def output(self):
+        return self.get_sound()

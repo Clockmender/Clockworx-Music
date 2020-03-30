@@ -6,9 +6,11 @@ from bpy.props import (
     FloatProperty,
     EnumProperty,
     StringProperty,
+    BoolProperty,
 )
 from ..cm_functions import (
     osc_generate,
+    get_note,
     get_freq,
 )
 from ..cm_functions import start_piano
@@ -21,98 +23,61 @@ class CM_ND_PianoRollNode(bpy.types.Node):
 
     collection : StringProperty(name="Pianoroll", default="",
         description="Name of Collection containing the notes")
-    pointer : StringProperty(name="Pointer", default="Pointer",
-        description='Name of Pointer Object, this will store the sound "Recipe"')
     frame_num: bpy.props.IntProperty(name="Frame", description="System Variable, do not set")
     volume : FloatProperty(name="Volume", default=1, min=0.1)
-    gen_type: EnumProperty(
-        items=(
-            ("sine", "Sine", "Sine Waveform"),
-            ("triangle", "Triangle", "Triangle Waveform"),
-            ("square", "Square", "Square Waveform"),
-            ("sawtooth", "Sawtooth", "Sawtooth Waveform"),
-            ("silence", "Silence", "Silence - no Waveform"),
-        ),
-        name="Waveform",
-        default="sine",
-        description="Waveform for Sound",
-    )
+    note_rev: BoolProperty(name="Reverse", default=False)
 
     def init(self, context):
-        self.outputs.new("cm_socket.sound", "Audio")
+        self.outputs.new("cm_socket.generic", "Note Data")
 
     def draw_buttons(self, context, layout):
         cm_pg = context.scene.cm_pg
         layout.prop(self, "collection")
-        layout.prop(self, "pointer")
-        row = layout.row()
-        #row.prop(self, "frame_num")
-        row.prop(self, "volume")
-        layout.prop(self, "gen_type")
         layout.label(text="")
-        layout.operator("cm_audio.evaluate_notes", icon="LONGDISPLAY")
-        layout.operator("cm_audio.evaluate_piano", icon="LONGDISPLAY")
-        layout.operator("cm_audio.evaluate_piano_stop", icon="CANCEL")
+        layout.prop(self, "volume")
+        layout.prop(self, "note_rev")
 
-    def evaluate(self):
-        snd = None
+    def execute(self):
         scene = bpy.context.scene
         cm = bpy.context.scene.cm_pg
-        self.frame_num = bpy.context.scene.frame_current
-        if self.frame_num >= bpy.context.scene.frame_end:
-            bpy.ops.screen.animation_cancel(restore_frame=True)
-            bpy.app.handlers.frame_change_post.remove(start_piano)
-            for area in bpy.context.screen.areas:
-                if area.type == 'VIEW_3D':
-                    area.spaces[0].region_3d.view_location.x = (
-                        area.spaces[0].region_3d.view_location.x
-                        -  (self.frame_num * 0.1))
-        else:
-            for area in bpy.context.screen.areas:
-                if area.type == 'VIEW_3D':
-                    area.spaces[0].region_3d.view_location.x = (
-                        area.spaces[0].region_3d.view_location.x + 0.1)
+        frame_num = bpy.context.scene.frame_current - bpy.context.scene.frame_start
+        pointer = bpy.data.objects[cm.pointer]
+        note_list = []
+        if pointer is None:
+            return None
+
+        pointer_loc = pointer.location.x
+
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                area.spaces[0].region_3d.view_location.x = pointer_loc + cm.view_offset
+
         collection = bpy.data.collections.get(self.collection)
         if collection is not None:
-            pointer = bpy.data.objects[self.pointer]
-            if pointer is not None:
-                if self.frame_num < cm.offset:
-                    pointer.location.x = -0.1
-                    pointer["sound"] = {}
-                if self.frame_num >= cm.offset:
-                    pointer.location.x = (self.frame_num - cm.offset) * 0.1
-                if self.frame_num == bpy.context.scene.frame_end:
-                    pointer.location.x = -0.1
-                obj_list = ([o for o in collection.objects if "note" in o.name
-                    and pointer.location.x - 0.001 < o.location.x < pointer.location.x + 0.001]
-                    )
-                num = 0
+            if frame_num >= 0 and frame_num < bpy.context.scene.frame_end:
+                pointer.location.x = frame_num * 0.1
+            else:
+                pointer.location.x = 0
+
+            obj_list = ([o for o in collection.objects if "note" in o.name
+                and pointer.location.x - 0.001 < o.location.x < pointer.location.x + 0.001]
+                )
+            num = 0
+            if len(obj_list) > 0:
                 for obj in obj_list:
+                    #get note_name
+                    note_name = get_note(int((obj.location.y * 10) + 9), 0)
                     freq = get_freq(int((obj.location.y * 10) + 9))
                     length = obj.dimensions.x * 10 * cm.time_note_min
-                    delay = self.frame_num * cm.time_note_min
-                    pointer["sound"][f"{self.frame_num}-{num}"] = [freq, delay, length]
-                    snd = osc_generate([0,freq], self.gen_type, cm.samples)
-                    snd = snd.limit(0, length).rechannel(cm.sound_channels)
-                    snd = snd.volume(self.volume)
+                    output = {}
+                    output["note_name"] = note_name
+                    output["note_freq"] = freq
+                    output["note_vol"] = round(self.volume, 5)
+                    output["note_dur"] = round(length, 5)
+                    output["note_rev"] = self.note_rev
+                    note_list.append(output)
                     num = num + 1
-                    aud.Device().play(snd)
+        return note_list
 
-    def get_sound(self):
-        sound = None
-        cm = bpy.context.scene.cm_pg
-        pointer = bpy.data.objects[self.pointer]
-        if len(pointer["sound"].keys()) > 0:
-            keys = pointer["sound"].keys()
-            first = True
-            for key in keys:
-                data = pointer["sound"][key]
-                snd = osc_generate([0,data[0]], self.gen_type, cm.samples)
-                snd = snd.volume(self.volume)
-                snd = snd.limit(0, data[2]).delay(data[1]).rechannel(cm.sound_channels)
-                if first:
-                    sound = snd
-                    first = False
-                else:
-                    sound = sound.mix(snd)
-        return sound
+    def output(self):
+        return self.execute()

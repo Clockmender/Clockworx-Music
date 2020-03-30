@@ -25,6 +25,7 @@ class CM_ND_AudioFileNode(bpy.types.Node):
         input_values = get_socket_values(self, sockets, self.inputs)
         cm = bpy.context.scene.cm_pg
         sound = aud.Sound.file(bpy.path.abspath(self.file_name_prop))
+        sound = sound.resample(cm.samples, False)
         sound = sound.volume(input_values[0])
         start = input_values[1] * (60 / cm.bpm)
         stop = start + (input_values[2] * (60 / cm.bpm))
@@ -32,4 +33,7 @@ class CM_ND_AudioFileNode(bpy.types.Node):
         if input_values[3]:
             sound = sound.reverse()
         sound = sound.rechannel(cm.sound_channels)
-        return sound
+        return {"sound": sound}
+
+    def output(self):
+        return self.get_sound()

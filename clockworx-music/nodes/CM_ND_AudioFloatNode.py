@@ -14,5 +14,5 @@ class CM_ND_AudioFloatNode(bpy.types.Node):
     def draw_buttons(self, context, layout):
         layout.prop(self, "float_num", text="")
 
-    def get_sound(self):
-        return self.float_num
+    def output(self):
+        return {"out1": self.float_num}

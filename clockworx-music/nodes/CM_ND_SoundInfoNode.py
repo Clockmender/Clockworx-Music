@@ -1,4 +1,5 @@
 import bpy
+import aud
 from bpy.props import (
     FloatProperty,
     IntProperty,
@@ -7,7 +8,7 @@ from ..cm_functions import connected_node_sound
 
 class CM_ND_SoundInfoNode(bpy.types.Node):
     bl_idname = "cm_audio.sound_info_node"
-    bl_label = "Sound Info"
+    bl_label = "Sound Info (Exec)"
     bl_icon = "SPEAKER"
 
     length : FloatProperty(name="Length (B)", default=0)
@@ -16,7 +17,6 @@ class CM_ND_SoundInfoNode(bpy.types.Node):
 
     def init(self, context):
         self.inputs.new("cm_socket.sound", "Audio")
-        self.outputs.new("cm_socket.sound", "Audio")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "length")
@@ -25,8 +25,13 @@ class CM_ND_SoundInfoNode(bpy.types.Node):
 
     def execute(self):
         cm = bpy.context.scene.cm_pg
-        sound = connected_node_sound(self, 0)
-        if sound == None:
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+            else:
+                sound = None
+        else:
             return None
         specs = sound.specs
         length = sound.length
@@ -34,6 +39,3 @@ class CM_ND_SoundInfoNode(bpy.types.Node):
         self.samples = specs[0]
         self.length = length / specs[0]
         self.length = self.length * (60 / cm.bpm)
-
-    def get_sound(self):
-        return connected_node_sound(self, 0)

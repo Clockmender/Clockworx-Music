@@ -17,8 +17,17 @@ class CM_ND_AudioMixNode(bpy.types.Node):
         self.outputs.new("cm_socket.sound", "Audio")
 
     def get_sound(self):
-        sound1 = connected_node_sound(self, 0)
-        sound2 = connected_node_sound(self, 1)
-        if sound1 == None or sound2 == None:
-            return None
-        return sound1.mix(sound2)
+        input1 = connected_node_sound(self, 0)
+        input2 = connected_node_sound(self, 1)
+        if isinstance(input1, dict) and isinstance(input2, dict):
+            if "sound" in input1.keys():
+                sound1 = input1["sound"]
+            if "sound" in input2.keys():
+                sound2 = input2["sound"]
+            if isinstance(sound1, aud.Sound) and isinstance(sound2, aud.Sound):
+                sound = sound1.mix(sound2)
+                return {"sound": sound}
+        return None
+
+def output(self):
+    return self.get_sound()

@@ -5,7 +5,7 @@ from ..cm_functions import connected_node_sound
 
 class CM_ND_AudioPlayerNode(bpy.types.Node):
     bl_idname = "cm_audio.player_node"
-    bl_label = "Frame Change Player"
+    bl_label = "Speaker: Automatic"
     bl_icon = "SPEAKER"
     bl_width_default = 180
 
@@ -14,8 +14,16 @@ class CM_ND_AudioPlayerNode(bpy.types.Node):
 
     def draw_buttons(self, context, layout):
         layout.label(text="Plays on Frame Change", icon="INFO")
+        layout.label(text="Click Start Exec...")
 
     def execute(self):
-        sound = connected_node_sound(self, 0)
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+            else:
+                sound = None
+        else:
+            return None
         if isinstance(sound, aud.Sound):
             aud.Device().play(sound)

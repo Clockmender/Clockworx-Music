@@ -12,7 +12,7 @@ from ..cm_functions import (
 
 class CM_ND_ObjectSoundNode(bpy.types.Node):
     bl_idname = "cm_audio.object_sound_node"
-    bl_label = "Trigger Sound from Object"
+    bl_label = "Speaker: Object"
     bl_icon = "SPEAKER"
 
     anim_type : EnumProperty(
@@ -50,7 +50,6 @@ class CM_ND_ObjectSoundNode(bpy.types.Node):
 
     def init(self, context):
         self.inputs.new("cm_socket.sound", "Audio")
-        self.outputs.new("cm_socket.sound", "Audio")
 
     def draw_buttons(self, context, layout):
         box = layout.box()
@@ -62,15 +61,17 @@ class CM_ND_ObjectSoundNode(bpy.types.Node):
         box.prop(self, "operand")
         box.prop(self, "trigger_value")
 
-    def get_sound(self):
-        cm = bpy.context.scene.cm_pg
-        sound = connected_node_sound(self, 0)
-        if sound == None:
-            return None
-        return sound
-
     def execute(self):
-        sound = connected_node_sound(self, 0)
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+            else:
+                sound = None
+        else:
+            return None
+        if not isinstance(sound, aud.Sound):
+            return None
         obj = bpy.data.objects[self.control_name]
         if obj is not None:
             if self.anim_type == "loc":

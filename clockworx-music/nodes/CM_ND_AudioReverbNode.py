@@ -22,16 +22,22 @@ class CM_ND_AudioReverbNode(bpy.types.Node):
         layout.prop(self, "poly_value")
 
     def get_sound(self):
-        sound = connected_node_sound(self, 0)
-        if sound == None:
-            return None
-        delay = self.delay_value / 1000
-        poly = self.poly_value / 1000
-        snd1 = sound.delay(delay)
-        snd = sound.mix(snd1)
-        # Add polys
-        sndl = sound.limit(poly,sound.length)
-        sndh = sound.limit(-poly,sound.length)
-        sound = sound.mix(sndl)
-        sound = sound.mix(sndh)
-        return sound
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+                if isinstance(sound, aud.Sound):
+                    delay = self.delay_value / 1000
+                    poly = self.poly_value / 1000
+                    snd1 = sound.delay(delay)
+                    snd = sound.mix(snd1)
+                    # Add polys
+                    sndl = sound.limit(poly,sound.length)
+                    sndh = sound.limit(-poly,sound.length)
+                    sound = sound.mix(sndl)
+                    sound = sound.mix(sndh)
+                    return {"sound": sound}
+        return None
+
+    def output(self):
+        return self.get_sound()

@@ -10,6 +10,7 @@ class CM_ND_AudioSlicerNode(bpy.types.Node):
     bl_idname = "cm_audio.slicer_node"
     bl_label = "Audio Slicer"
     bl_icon = "SPEAKER"
+    bl_width_default = 220
 
     slices_num : bpy.props.IntProperty(name="Slices #", default=5, min=2)
     slices_length : bpy.props.FloatProperty(name="Length (B)", default=1, min=0.001)
@@ -42,35 +43,43 @@ class CM_ND_AudioSlicerNode(bpy.types.Node):
 
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
-        sound = connected_node_sound(self, 0)
-        sound_out = None
-        if sound == None or self.slices_num < 2 or "," not in self.slices_seq:
-            return None
-        length = self.slices_length * (60 / cm.bpm)
-        start = 0
-        stop = start + length
-        params = []
-        for i in range(self.slices_num):
-            params.append([start, stop])
-            start = start + length
-            stop = stop + length
-        first = True
-        reversals = self.slices_rev.split(",")
-        ind_r = 1
-        for r in self.slices_seq.split(","):
-            # FIXME Check it's an integer
-            ind = int(r) - 1
-            start = params[ind][0]
-            stop = params[ind][1]
-            if first:
-                sound_out = sound.limit(start, stop).volume(self.volume)
-                if str(ind_r) in reversals:
-                    sound_out = sound_out.reverse().volume(self.volume)
-                first = False
-            else:
-                snd = sound.limit(start, stop).volume(self.volume)
-                if str(ind_r) in reversals:
-                    snd = snd.reverse().volume(self.volume)
-                sound_out = sound_out.join(snd)
-            ind_r = ind_r + 1
-        return sound_out
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+                if isinstance(sound, aud.Sound):
+                    sound_out = None
+                    if sound == None or self.slices_num < 2 or "," not in self.slices_seq:
+                        return None
+                    length = self.slices_length * (60 / cm.bpm)
+                    start = 0
+                    stop = start + length
+                    params = []
+                    for i in range(self.slices_num):
+                        params.append([start, stop])
+                        start = start + length
+                        stop = stop + length
+                    first = True
+                    reversals = self.slices_rev.split(",")
+                    ind_r = 1
+                    for r in self.slices_seq.split(","):
+                        # FIXME Check it's an integer
+                        ind = int(r) - 1
+                        start = params[ind][0]
+                        stop = params[ind][1]
+                        if first:
+                            sound_out = sound.limit(start, stop).volume(self.volume)
+                            if str(ind_r) in reversals:
+                                sound_out = sound_out.reverse().volume(self.volume)
+                            first = False
+                        else:
+                            snd = sound.limit(start, stop).volume(self.volume)
+                            if str(ind_r) in reversals:
+                                snd = snd.reverse().volume(self.volume)
+                            sound_out = sound_out.join(snd)
+                        ind_r = ind_r + 1
+                    return {"sound": sound_out}
+        return None
+
+    def output(self):
+        return self.get_sound()

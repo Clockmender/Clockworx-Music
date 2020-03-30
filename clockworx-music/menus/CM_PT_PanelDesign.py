@@ -21,6 +21,8 @@ class CM_PT_PanelDesign(Panel):
         row = box.row()
         row.operator("cm_audio.execute_start", text="Start Exec", icon="PLAY")
         row.operator("cm_audio.execute_stop", text="Stop Exec", icon="SNAP_FACE")
+        box.prop(cm_pg, "view_offset")
+        box.prop(cm_pg, "pointer")
         box = layout.box()
         box.label(text="Execution by Time Interval")
         row = box.row()

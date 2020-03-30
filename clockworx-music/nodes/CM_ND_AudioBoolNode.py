@@ -13,5 +13,5 @@ class CM_ND_AudioBoolNode(bpy.types.Node):
     def draw_buttons(self, context, layout):
         layout.prop(self, "bool_input", text="")
 
-    def get_sound(self):
-        return self.bool_input
+    def output(self):
+        return {"out1": self.bool_input}

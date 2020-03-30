@@ -27,20 +27,26 @@ class CM_ND_AudioPhaserNode(bpy.types.Node):
         layout.prop(self, "resolution")
 
     def get_sound(self):
-        sound = connected_node_sound(self, 0)
-        if sound == None:
-            return None
-        max_offset = self.max_offset / 1000
-        cm = bpy.context.scene.cm_pg
-        sound = sound.resample(cm.samples, False)
-        slice_t = sound.length / cm.samples
-        ref_t   = slice_t / self.resolution
-        seq = aud.Sequence()
-        for i in range(self.resolution):
-            slice = sound.limit(ref_t * i,(ref_t * i) + ref_t)
-            rand = randbelow(5)
-            shift = (sin(((i * pi) /  self.phase_length)) * self.max_offset) + (rand / 2000)
-            entry = seq.add(slice, (ref_t * i) + shift, (ref_t * i) + ref_t + shift, 0)
-        seq = seq.resample(cm.samples, False)
-        sound = sound.mix(seq).limit(0, sound.length / cm.samples)
-        return sound
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+                if isinstance(sound, aud.Sound):
+                    max_offset = self.max_offset / 1000
+                    cm = bpy.context.scene.cm_pg
+                    sound = sound.resample(cm.samples, False)
+                    slice_t = sound.length / cm.samples
+                    ref_t   = slice_t / self.resolution
+                    seq = aud.Sequence()
+                    for i in range(self.resolution):
+                        slice = sound.limit(ref_t * i,(ref_t * i) + ref_t)
+                        rand = randbelow(5)
+                        shift = (sin(((i * pi) /  self.phase_length)) * self.max_offset) + (rand / 2000)
+                        entry = seq.add(slice, (ref_t * i) + shift, (ref_t * i) + ref_t + shift, 0)
+                    seq = seq.resample(cm.samples, False)
+                    sound = sound.mix(seq).limit(0, sound.length / cm.samples)
+                    return {"sound": sound}
+        return None
+
+    def output(self):
+        return self.get_sound()

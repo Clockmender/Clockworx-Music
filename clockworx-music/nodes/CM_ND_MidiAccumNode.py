@@ -32,36 +32,44 @@ class CM_ND_MidiAccumNode(bpy.types.Node):
     def get_midi(self):
         cm = bpy.context.scene.cm_pg
         buffer_in = connected_node_midi(self, 0)
-        for b in buffer_in:
-            if self.con_plus != self.con_minus:
-                # if there is data
-                if len(b) > 0 and len(b[0]) > 0:
-                    if b[0][0] == 144:
-                        if b[0][1] == self.con_plus:
-                            cm.midi_data["notes_cu"][self.con_plus] = round(
-                                (cm.midi_data["notes_cu"][self.con_plus] +
-                                (b[0][2] / 127 * self.factor / 2)), 5
-                            )
-                        elif b[0][1] == self.con_minus:
-                            cm.midi_data["notes_cu"][self.con_plus] = round(
-                                (cm.midi_data["notes_cu"][self.con_plus]
-                                 - (b[0][2] / 127 * self.factor / 2)), 5
-                            )
-                    elif b[0][0] == 176:
-                        if b[0][1] == self.con_plus:
-                            cm.midi_data["params_cu"][self.con_plus] = round(
-                                (cm.midi_data["params_cu"][self.con_plus]
-                                 + (b[0][2] / 127 * self.factor / 2)), 5
-                            )
-                        elif b[0][1] == self.con_minus:
-                            cm.midi_data["params_cu"][self.con_plus] = round(
-                                (cm.midi_data["params_cu"][self.con_plus]
-                                 - (b[0][2] / 127 * self.factor) / 2), 5
-                            )
-            else:
-                print("Two Controls are the same ID")
+        if buffer_in is not None:
+            for b in buffer_in:
+                if self.con_plus != self.con_minus:
+                    # if there is data
+                    if len(b) > 0 and len(b[0]) > 0:
+                        if b[0][0] == 144:
+                            if b[0][1] == self.con_plus:
+                                cm.midi_data["notes_cu"][self.con_plus] = round(
+                                    (cm.midi_data["notes_cu"][self.con_plus] +
+                                    (b[0][2] / 127 * self.factor / 2)), 5
+                                )
+                            elif b[0][1] == self.con_minus:
+                                cm.midi_data["notes_cu"][self.con_plus] = round(
+                                    (cm.midi_data["notes_cu"][self.con_plus]
+                                     - (b[0][2] / 127 * self.factor / 2)), 5
+                                )
+                        elif b[0][0] == 176:
+                            if b[0][1] == self.con_plus:
+                                cm.midi_data["params_cu"][self.con_plus] = round(
+                                    (cm.midi_data["params_cu"][self.con_plus]
+                                     + (b[0][2] / 127 * self.factor / 2)), 5
+                                )
+                            elif b[0][1] == self.con_minus:
+                                cm.midi_data["params_cu"][self.con_plus] = round(
+                                    (cm.midi_data["params_cu"][self.con_plus]
+                                     - (b[0][2] / 127 * self.factor) / 2), 5
+                                )
+                else:
+                    print("Two Controls are the same ID")
 
-        if cm.midi_debug:
-            print(str(cm.midi_data["notes_cu"]))
-            print(str(cm.midi_data["params_cu"]))
-        return [cm.midi_data["notes_cu"][self.con_plus], cm.midi_data["params_cu"][self.con_plus]]
+            if cm.midi_debug:
+                print(str(cm.midi_data["notes_cu"]))
+                print(str(cm.midi_data["params_cu"]))
+            return [cm.midi_data["notes_cu"][self.con_plus], cm.midi_data["params_cu"][self.con_plus]]
+        else:
+            return None
+
+
+        def output(self):
+            output = self.get_midi()
+            return {"MIDI Handler": output}

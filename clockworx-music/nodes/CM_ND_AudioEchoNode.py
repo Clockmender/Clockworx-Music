@@ -27,19 +27,26 @@ class CM_ND_AudioEchoNode(bpy.types.Node):
 
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
-        sound = connected_node_sound(self, 0)
-        if sound == None:
-            return None
-        volume = self.volume
-        sound = sound.volume(volume)
-        first = True
-        for i in range(self.echo_num):
-            delay = (self.time_prop * (i + 1)) * (60 / cm.bpm)
-            volume = volume * (1 - self.factor)
-            snd = sound.delay(delay).volume(volume)
-            if first:
-                sound_out = sound.mix(snd)
-                first = False
-            else:
-                sound_out = sound_out.mix(snd)
-        return sound_out.volume(self.volume)
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+                if isinstance(sound, aud.Sound):
+                    volume = self.volume
+                    sound = sound.volume(volume)
+                    first = True
+                    for i in range(self.echo_num):
+                        delay = (self.time_prop * (i + 1)) * (60 / cm.bpm)
+                        volume = volume * (1 - self.factor)
+                        snd = sound.delay(delay).volume(volume)
+                        if first:
+                            sound_out = sound.mix(snd)
+                            first = False
+                        else:
+                            sound_out = sound_out.mix(snd)
+                    sound_out.volume(self.volume)
+                    return {"sound": sound_out}
+        return None
+
+    def output(self):
+        return self.get_sound()

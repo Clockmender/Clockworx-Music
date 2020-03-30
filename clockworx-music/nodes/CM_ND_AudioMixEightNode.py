@@ -24,12 +24,20 @@ class CM_ND_AudioMixEightNode(bpy.types.Node):
 
     def get_sound(self):
         first = True
+        sound_list = None
+        sound = None
         for i in range(8):
-            snd = connected_node_sound(self, i)
-            if snd is not None:
-                if first:
-                    sound_list = snd
-                    first = False
-                else:
-                    sound_list = sound_list.mix(snd)
-        return sound_list
+            input = connected_node_sound(self, i)
+            if isinstance(input, dict):
+                if "sound" in input.keys():
+                    sound = input["sound"]
+                    if isinstance(sound, aud.Sound):
+                        if first:
+                            sound_list = sound
+                            first = False
+                        else:
+                            sound_list = sound_list.mix(sound)
+        return {"sound": sound_list}
+
+    def output(self):
+        return self.get_sound()

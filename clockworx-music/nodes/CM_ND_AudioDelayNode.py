@@ -7,7 +7,7 @@ from ..cm_functions import (
 
 class CM_ND_AudioDelayNode(bpy.types.Node):
     bl_idname = "cm_audio.delay_node"
-    bl_label = "Delay by Time/Beats"
+    bl_label = "Delay"
     bl_icon = "SPEAKER"
 
     time_prop : bpy.props.FloatProperty(name="Delay", default=0, min=0, soft_max=10)
@@ -22,8 +22,16 @@ class CM_ND_AudioDelayNode(bpy.types.Node):
 
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
-        sound = connected_node_sound(self, 0)
-        if sound == None:
-            return None
-        delay = self.time_prop * (60 / cm.bpm)
-        return sound.delay(delay)
+        input = connected_node_sound(self, 0)
+        if isinstance(input, dict):
+            if "sound" in input.keys():
+                sound = input["sound"]
+                if isinstance(sound, aud.Sound):
+                    delay = self.time_prop * (60 / cm.bpm)
+                    sound = sound.delay(delay)
+                    return {"sound": sound}
+        return None
+
+
+    def output(self):
+        return self.get_sound()

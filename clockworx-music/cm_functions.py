@@ -40,21 +40,40 @@ def connected_node_info(node, socket):
     node = connected_node(node, socket)
     if node == None:
         return None
-    return node.info(bpy.context)
+    if hasattr(node, "get_sound"):
+        return node.info(bpy.context)
+    else:
+        return None
 
 def connected_node_sound(node, socket):
     """Get Return from get_sound() Function"""
     node = connected_node(node, socket)
     if node == None:
         return None
-    return node.get_sound()
+    if hasattr(node, "get_sound"):
+        return node.get_sound()
+    else:
+        return None
 
 def connected_node_midi(node, socket):
     """Get Return from get_midi() Function"""
     node = connected_node(node, socket)
     if node == None:
         return None
-    return node.get_midi()
+    if hasattr(node, "get_midi"):
+        return node.get_midi()
+    else:
+        return None
+
+def connected_node_output(node, socket):
+    """Get Return from get_midi() Function"""
+    node = connected_node(node, socket)
+    if node == None:
+        return None
+    if hasattr(node, "output"):
+        return node.output()
+    else:
+        return None
 
 def view_lock():
     """Lock the View Rotation & Scale for DAW"""
@@ -85,7 +104,7 @@ def get_socket_values(node, sockets, node_inputs):
     return inputs
 
 
-def start_clock(scene):
+def start_exec(scene):
     """Run Execute Function in Nodes"""
     for nodetree in [
         n for n in bpy.data.node_groups if n.rna_type.name == "Clockworx Music Editor"
@@ -131,35 +150,14 @@ def off_set(values, factors):
         Vector(((1 + x_loc), (1 + y_loc), (1 + z_loc)))
         )
 
-def eval_data(input_values, num):
-    cm = bpy.context.scene.cm_pg
-    if "," in input_values[-1]:
-        note_data = input_values[-1].split(",")
-        if len(note_data) == 4:
-            data = []
-            data.append(note_data[0])
-            data.append(0)
-            try:
-                data.append(float(note_data[1]))
-            except:
-                cm.message = "Invalid Input; Volume"
-                return input_values
-            if num == 6:
-                data.append(0)
-            try:
-                data.append(float(note_data[2]))
-            except:
-                cm.message = "Invalid Input; Length"
-                return input_values
-            if note_data[3] == "True":
-                data.append(True)
-            else:
-                data.append(False)
-        else:
-            cm.message = "Invalid Input Items"
-            data = input_values
-    else:
-        data = input_values
+def eval_data(input):
+    if "note_name" in input.keys():
+        data = []
+        data.append(input["note_name"])
+        data.append(input["note_freq"])
+        data.append(input["note_vol"])
+        data.append(input["note_dur"])
+        data.append(input["note_rev"])
     return data
 
 def analyse_midi_file(context):
@@ -256,7 +254,7 @@ def find_note(freq_index):
     return note_name
 
 def get_index(note_name):
-    """Get Not Index from Name"""
+    """Get Note Index from Name"""
     index = next((i for i, x in enumerate(note_list) if x == note_name), -1)
     return index
 

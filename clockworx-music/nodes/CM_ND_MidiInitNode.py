@@ -16,6 +16,7 @@ class CM_ND_MidiInitNode(bpy.types.Node):
 
     pgm.init()
     num_packets = 1
+    midi_input = None
     midi_input2 = None
     mid_1_valid = True
     mid_dev_num = pgm.get_count()
@@ -61,7 +62,7 @@ class CM_ND_MidiInitNode(bpy.types.Node):
         buffer2 = []
         cm = bpy.context.scene.cm_pg
 
-        if self.is_pygame_init:
+        if self.is_pygame_init and self.midi_input is not None:
             # messages are formatted this way: [[message type, note / parameter ID, velocity
             # / parameter value, ?], TimeStamp]
             buffer1 = pgm.Input.read(self.midi_input, self.num_packets)
@@ -79,4 +80,6 @@ class CM_ND_MidiInitNode(bpy.types.Node):
                         print('Dev 2: ' + str(pgm.get_device_info(1)))
                         print(str(cm.midi_buffer["buffer2"]))
 
-        return [cm.midi_buffer["buffer1"], cm.midi_buffer["buffer2"]]
+            return [cm.midi_buffer["buffer1"], cm.midi_buffer["buffer2"]]
+        else:
+            return None

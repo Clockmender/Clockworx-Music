@@ -1,6 +1,10 @@
 import bpy
+import os
+import aud
+from pathlib import Path
 from ..cm_functions import (
     analyse_midi_file,
+    osc_generate,
     get_freq,
     )
 
