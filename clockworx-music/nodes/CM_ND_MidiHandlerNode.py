@@ -6,15 +6,15 @@ from ..cm_functions import connected_node_midi
 
 class CM_ND_MidiHandlerNode(bpy.types.Node):
     bl_idname = "cm_audio_midi_midi_handler"
-    bl_label = "MIDI Multi-Event Handler"
+    bl_label = "MIDI Event Handler"
     bl_width_default = 150
 
     velocity : IntProperty(name="Velocity", default=100, min=-1, max=127,
         description="Velocity for Keys (-1 for Keyboard)")
 
     def init(self, context):
-        self.inputs.new("cm_socket.sound", "Midi Data")
-        self.outputs.new("cm_socket.sound", "[Key, Control] Data")
+        self.inputs.new("cm_socket.midi", "Midi Data")
+        self.outputs.new("cm_socket.midi", "[Key, Control] Data")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "velocity")

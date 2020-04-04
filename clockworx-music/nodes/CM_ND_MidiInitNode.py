@@ -50,7 +50,7 @@ class CM_ND_MidiInitNode(bpy.types.Node):
         # By now we should have a number for valid Midi Inputs
 
     def init(self, context):
-        self.outputs.new("cm_socket.sound", "Midi Data")
+        self.outputs.new("cm_socket.midi", "Midi Data")
 
     def draw_buttons(self, context, layout):
         cm_pg = context.scene.cm_pg
@@ -83,3 +83,6 @@ class CM_ND_MidiInitNode(bpy.types.Node):
             return [cm.midi_buffer["buffer1"], cm.midi_buffer["buffer2"]]
         else:
             return None
+
+    def output(self):
+        return self.get_midi()

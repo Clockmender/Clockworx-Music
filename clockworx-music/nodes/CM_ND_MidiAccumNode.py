@@ -12,19 +12,19 @@ from ..cm_functions import connected_node_midi
 
 class CM_ND_MidiAccumNode(bpy.types.Node):
     bl_idname = "cm_audio_midi_accum"
-    bl_label = "MIDI Multi-Event Accumulator"
+    bl_label = "MIDI Accumulator"
     bl_width_default = 150
 
-    factor: FloatProperty(name="Factor", default=1.0, description="Multiplication Factor")
+    #factor: FloatProperty(name="Factor", default=1.0, description="Multiplication Factor")
     con_plus: IntProperty(name="Plus", default=59, min=-1, max=127)
     con_minus: IntProperty(name="Minus", default=58, min=-1, max=127)
 
     def init(self, context):
-        self.inputs.new("cm_socket.sound", "Midi Data")
-        self.outputs.new("cm_socket.sound", "[Accumulated Floats]")
+        self.inputs.new("cm_socket.midi", "Midi Data")
+        self.outputs.new("cm_socket.midi", "[Accumulated Floats]")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "factor")
+        #layout.prop(self, "factor")
         layout.prop(self, "con_plus")
         layout.prop(self, "con_minus")
         layout.operator("cm_audio.reset_accu", text="Reset to 0", icon="CANCEL")
@@ -41,23 +41,23 @@ class CM_ND_MidiAccumNode(bpy.types.Node):
                             if b[0][1] == self.con_plus:
                                 cm.midi_data["notes_cu"][self.con_plus] = round(
                                     (cm.midi_data["notes_cu"][self.con_plus] +
-                                    (b[0][2] / 127 * self.factor / 2)), 5
+                                    (b[0][2] / 127)), 5
                                 )
                             elif b[0][1] == self.con_minus:
                                 cm.midi_data["notes_cu"][self.con_plus] = round(
                                     (cm.midi_data["notes_cu"][self.con_plus]
-                                     - (b[0][2] / 127 * self.factor / 2)), 5
+                                     - (b[0][2] / 127)), 5
                                 )
                         elif b[0][0] == 176:
                             if b[0][1] == self.con_plus:
                                 cm.midi_data["params_cu"][self.con_plus] = round(
                                     (cm.midi_data["params_cu"][self.con_plus]
-                                     + (b[0][2] / 127 * self.factor / 2)), 5
+                                     + (b[0][2] / 127)), 5
                                 )
                             elif b[0][1] == self.con_minus:
                                 cm.midi_data["params_cu"][self.con_plus] = round(
                                     (cm.midi_data["params_cu"][self.con_plus]
-                                     - (b[0][2] / 127 * self.factor) / 2), 5
+                                     - (b[0][2] / 127)), 5
                                 )
                 else:
                     print("Two Controls are the same ID")

@@ -19,8 +19,8 @@ class CM_ND_MidiNoteNode(bpy.types.Node):
     midi_value : FloatProperty(name="Value", default=0.0)
 
     def init(self, context):
-        self.inputs.new("cm_socket.sound", "Midi Data")
-        self.outputs.new("cm_socket.sound", "Key Data")
+        self.inputs.new("cm_socket.midi", "Midi Data")
+        self.outputs.new("cm_socket.midi", "Key Data")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "midi_type")
