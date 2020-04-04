@@ -33,7 +33,7 @@ class CM_PT_PanelView(Panel):
         split.prop(cm_pg, "suffix_obj", text="")
         box.operator("cm_audio.rename_objs", icon = "PREFERENCES")
         row = layout.row()
-        row.prop(cm_pg, "message1")
+        layout.label(text=cm_pg.message, icon="INFO")
         row = layout.row()
         row.operator("cm_audio.lock_view", icon="URL", text="")
         row.label(text="View Lock (Pianoroll)")
