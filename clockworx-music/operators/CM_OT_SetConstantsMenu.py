@@ -16,5 +16,6 @@ class CM_OT_SetConstantsMenu(bpy.types.Operator):
         bpy.context.scene.render.fps_base = 100
         cm.time_note_min = round((60 / cm.bpm) / note_den, 4)
         cm.duration_factor = round(note_den * cm.bpm / 600, 4)
+        cm.bar_len = ((cm.time_sig_num / cm.time_sig_den) * int(cm.note_den) * 0.1)
         cm.message = "Parameters Set."
         return {"FINISHED"}
