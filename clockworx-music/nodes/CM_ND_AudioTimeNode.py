@@ -1,8 +1,8 @@
 import bpy
+from .._base.base_node import CM_ND_BaseNode
 
 
-
-class CM_ND_AudioTimeNode(bpy.types.Node):
+class CM_ND_AudioTimeNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.time_node"
     bl_label = "Time Info"
     bl_icon = "SPEAKER"

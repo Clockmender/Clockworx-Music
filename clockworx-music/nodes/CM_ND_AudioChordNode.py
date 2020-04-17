@@ -1,4 +1,10 @@
 import bpy
+from bpy.types import (
+    NodeSocketString,
+    NodeSocketFloat,
+    NodeSocketBool,
+)
+from .._base.base_node import CM_ND_BaseNode
 from bpy.props import (
     EnumProperty,
     StringProperty,
@@ -14,7 +20,7 @@ from ..cm_functions import (
     )
 
 
-class CM_ND_AudioChordNode(bpy.types.Node):
+class CM_ND_AudioChordNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.chord_node"
     bl_label = "Chord Oscillator"
     bl_icon = "SPEAKER"
@@ -35,11 +41,8 @@ class CM_ND_AudioChordNode(bpy.types.Node):
     num_notes : IntProperty(name="Notes #", default=3, min=3, max=5)
 
     def init(self, context):
-        self.inputs.new("cm_socket.text", "Note")
-        self.inputs.new("cm_socket.float", "Volume")
-        self.inputs.new("cm_socket.float", "Length (B)")
-        self.inputs.new("cm_socket.bool", "Reverse")
-        self.inputs.new("cm_socket.generic", "Note Data")
+        super().init(context)
+        self.inputs.new("cm_socket.note", "Note Data")
         self.outputs.new("cm_socket.sound", "Audio")
 
     def draw_buttons(self, context, layout):
@@ -50,18 +53,9 @@ class CM_ND_AudioChordNode(bpy.types.Node):
 
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
-        sockets = self.inputs.keys()
-        input_values = get_socket_values(self, sockets, self.inputs)
-        input_values.insert(1, 0)
-        input = connected_node_output(self, 4)
+        input = connected_node_output(self, 0)
         if input is None:
-            output = {}
-            output["note_name"] = input_values[0]
-            output["note_freq"] = input_values[1]
-            output["note_vol"] = input_values[2]
-            output["note_dur"] = input_values[3]
-            output["note_rev"] = input_values[4]
-            input = [output]
+            return None
         else:
             if isinstance(input, dict):
                 input = [input]
@@ -70,7 +64,7 @@ class CM_ND_AudioChordNode(bpy.types.Node):
         sound_out = None
         for notes in input:
             data = eval_data(notes)
-            if data[0] == "":
+            if data is None or data[0] == "":
                 cm.message = "You MUST Give a Note Name"
                 return None
             index_list = get_chord_ind(data[0], self.num_notes)

@@ -25,14 +25,32 @@ import aud
 import bpy
 import os
 from mathutils import Quaternion, Vector, Euler
-from math import pi
+from math import pi, fsum
+
+
+def oops(self, context):
+    """Error Routine.
+
+    Note:
+        Displays error message in a popup.
+
+    Args:
+        context: Blender bpy.context instance.
+
+    Returns:
+        Nothing.
+    """
+
+    cm = context.scene.cm_pg
+    self.layout.label(text=cm.error)
 
 
 def connected_node(node, socket):
     """ Get Connected Node from Socket Num"""
-    for link in node.id_data.links:
-        if link.to_socket == node.inputs[socket]:
-            return link.from_node
+    if len(node.inputs) > socket:
+        for link in node.id_data.links:
+            if link.to_socket == node.inputs[socket]:
+                return link.from_node
     return None
 
 def connected_node_info(node, socket):
@@ -93,12 +111,15 @@ def get_socket_values(node, sockets, node_inputs):
         socket = connected_node(node, i)
         if socket:
             if len(socket.values()) > 0:
+                #maybe should be default_value...
                 inputs.append(socket.values()[0])
             else:
                 inputs.append(None)
         else:
             if hasattr(node_inputs[sockets[i]], "value"):
                 inputs.append(node_inputs[sockets[i]].value)
+            elif hasattr(node_inputs[sockets[i]], "default_value"):
+                inputs.append(node_inputs[sockets[i]].default_value)
             else:
                 inputs.append("")
     return inputs
@@ -158,7 +179,9 @@ def eval_data(input):
         data.append(input["note_vol"])
         data.append(input["note_dur"])
         data.append(input["note_rev"])
-    return data
+        return data
+    else:
+        return None
 
 def analyse_midi_file(context):
     """Analyse MIDI File"""
@@ -197,10 +220,12 @@ def analyse_midi_file(context):
                 (in_l[2] == "Title_t") and (int(in_l[0]) > 1) and (in_l[3] != "Master Section")
             ):
                 # Get Track Names & Numbers
+                otName = in_l[3].strip('"')
                 if in_l[0] == str(cm_node.midi_channel):
                     tName = in_l[3].strip('"')
                     cm.data_dict["Track Name"] = tName
-                otName = in_l[3].strip('"')
+                else:
+                    cm.data_dict["Track Name"] = otName
                 if "Tracks" not in cm.data_dict.keys():
                     cm.data_dict["Tracks"] = [[otName, int(in_l[0])]]
                     cm.channels = in_l[0]# + " - " + otName
@@ -239,6 +264,13 @@ note_freq = [
     8372.018,8869.844,9397.272,9956.064,10548.08,11175.30,11839.82,12543.85,13289.75,14080.0,14917.24,15804.27,
     16744.04,17739.69,18794.54,19912.13,21096.16,22350.60,23679.64,25087.70,26579.50,28160.0,29834.48,31608.54]
 
+def check_note(note_name):
+    return note_name in note_list
+
+def get_values(num):
+    list_f = note_freq[0:num]
+    sum = fsum(list_f)
+    return list_f, sum
 
 def get_note(note_idx, offset):
     """Get Note Name from Index"""
@@ -250,7 +282,7 @@ def get_note(note_idx, offset):
 def find_note(freq_index):
     """Find Note Index from Frequency"""
     idx = next((i for i, x in enumerate(note_freq) if x == freq_index), -1)
-    note_name = noteList[idx] if idx > -1 else "Not a Note"
+    note_name = note_list[idx] if idx > -1 else "Not a Note"
     return note_name
 
 def get_index(note_name):

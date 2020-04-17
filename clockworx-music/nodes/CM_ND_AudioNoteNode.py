@@ -1,13 +1,15 @@
 import bpy
+from .._base.base_node import CM_ND_BaseNode
+
 from bpy.props import (
    BoolProperty,
    FloatProperty,
    StringProperty,
 )
 
-class CM_ND_AudioNoteNode(bpy.types.Node):
+class CM_ND_AudioNoteNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.note_node"
-    bl_label = "Note Data: Input"
+    bl_label = "Note Data: Raw"
     bl_icon = "SPEAKER"
 
     note_name : StringProperty(name="Note", default="")
@@ -17,7 +19,8 @@ class CM_ND_AudioNoteNode(bpy.types.Node):
     note_rev: BoolProperty(name="Reverse", default=False)
 
     def init(self, context):
-        self.outputs.new("cm_socket.generic", "Note Data")
+        super().init(context)
+        self.outputs.new("cm_socket.note", "Note Data")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "note_name")

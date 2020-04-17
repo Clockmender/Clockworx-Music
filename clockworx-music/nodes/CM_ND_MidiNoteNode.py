@@ -1,4 +1,6 @@
 import bpy
+from .._base.base_node import CM_ND_BaseNode
+
 from bpy.props import (
     BoolProperty,
     IntProperty,
@@ -9,7 +11,7 @@ from ..cm_functions import (
     )
 
 
-class CM_ND_MidiNoteNode(bpy.types.Node):
+class CM_ND_MidiNoteNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.midi_note_node"
     bl_label = "MIDI Key Info"
     bl_icon = "SPEAKER"
@@ -19,6 +21,7 @@ class CM_ND_MidiNoteNode(bpy.types.Node):
     midi_value : FloatProperty(name="Value", default=0.0)
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.midi", "Midi Data")
         self.outputs.new("cm_socket.midi", "Key Data")
 

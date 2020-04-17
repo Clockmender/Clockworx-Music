@@ -1,4 +1,6 @@
 import bpy
+from .._base.base_node import CM_ND_BaseNode
+
 from bpy.props import (
     IntProperty,
     BoolProperty,
@@ -13,7 +15,7 @@ from ..cm_functions import (
     off_set,
     )
 
-class CM_ND_MidiAnimNode(bpy.types.Node):
+class CM_ND_MidiAnimNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio_midi_anim_node"
     bl_label = "MIDI Object Animate"
     bl_width_default = 150
@@ -46,6 +48,7 @@ class CM_ND_MidiAnimNode(bpy.types.Node):
     use_bones : BoolProperty(name="Use Bone", default=False)
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.midi", "[Key, Control] Data")
         self.inputs.new("cm_socket.object", "Object")
         self.inputs.new("cm_socket.bone", "Bone")

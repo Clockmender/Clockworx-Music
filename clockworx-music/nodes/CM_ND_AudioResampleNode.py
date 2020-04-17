@@ -1,12 +1,13 @@
 import bpy
 import aud
+from .._base.base_node import CM_ND_BaseNode
 
 from ..cm_functions import (
     connected_node_sound,
 )
 
 
-class CM_ND_AudioResampleNode(bpy.types.Node):
+class CM_ND_AudioResampleNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.resample_node"
     bl_label = "Resample To System"
     bl_icon = "SPEAKER"
@@ -14,6 +15,7 @@ class CM_ND_AudioResampleNode(bpy.types.Node):
     qual_bool : bpy.props.BoolProperty(name="H/L Quality", default=False)
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.sound", "Audio")
         self.outputs.new("cm_socket.sound", "Audio")
 

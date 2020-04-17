@@ -1,12 +1,13 @@
 import bpy
 import aud
+from .._base.base_node import CM_ND_BaseNode
 
 from ..cm_functions import (
     connected_node_sound,
 )
 
 
-class CM_ND_AudioLimitNode(bpy.types.Node):
+class CM_ND_AudioLimitNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.limit_node"
     bl_label = "Limit"
     bl_icon = "SPEAKER"
@@ -16,6 +17,7 @@ class CM_ND_AudioLimitNode(bpy.types.Node):
     message : bpy.props.StringProperty(name="")
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.sound", "Audio")
         self.outputs.new("cm_socket.sound", "Audio")
 

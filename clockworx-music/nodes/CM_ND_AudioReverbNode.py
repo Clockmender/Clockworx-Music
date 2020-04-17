@@ -1,11 +1,12 @@
 import bpy
 import aud
+from .._base.base_node import CM_ND_BaseNode
 from bpy.props import FloatProperty
 from ..cm_functions import (
     connected_node_sound,
 )
 
-class CM_ND_AudioReverbNode(bpy.types.Node):
+class CM_ND_AudioReverbNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.reverb_node"
     bl_label = "Reverb"
     bl_icon = "SPEAKER"
@@ -14,6 +15,7 @@ class CM_ND_AudioReverbNode(bpy.types.Node):
     poly_value : FloatProperty(name="Poly Offset (ms)", default=1, min=1, max=50)
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.sound", "Audio")
         self.outputs.new("cm_socket.sound", "Audio")
 

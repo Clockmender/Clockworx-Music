@@ -7,10 +7,14 @@ class CM_OT_StopAudioNodeOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return True
+        node = context.node
+        if hasattr(node, "get_sound"):
+            return True
+        else:
+            return False
 
     def execute(self, context):
-        sound = context.audionode.get_sound()
+        sound = context.node.get_sound()
         if sound != None:
             aud.Device().stopAll()
         return {"FINISHED"}

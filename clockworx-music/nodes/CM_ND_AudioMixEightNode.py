@@ -1,17 +1,19 @@
 import bpy
 import aud
+from .._base.base_node import CM_ND_BaseNode
 
 from ..cm_functions import (
     connected_node_sound,
 )
 
 
-class CM_ND_AudioMixEightNode(bpy.types.Node):
+class CM_ND_AudioMixEightNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.mix_eight_node"
     bl_label = "8 Channel Mixer"
     bl_icon = "SPEAKER"
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.sound", "Audio 1")
         self.inputs.new("cm_socket.sound", "Audio 2")
         self.inputs.new("cm_socket.sound", "Audio 3")

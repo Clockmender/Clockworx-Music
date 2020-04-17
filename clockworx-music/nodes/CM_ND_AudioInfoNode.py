@@ -1,7 +1,7 @@
 import bpy
+from .._base.base_node import CM_ND_BaseNode
 
-
-class CM_ND_AudioInfoNode(bpy.types.Node):
+class CM_ND_AudioInfoNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.info_node"
     bl_label = "Project Info"
     bl_icon = "SPEAKER"

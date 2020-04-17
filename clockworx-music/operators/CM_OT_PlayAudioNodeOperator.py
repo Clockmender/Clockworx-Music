@@ -7,10 +7,14 @@ class CM_OT_PlayAudioNodeOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.audionode.get_sound() != None
+        node = context.node
+        if hasattr(node, "get_sound"):
+            return node.get_sound() != None
+        else:
+            return False
 
     def execute(self, context):
-        sound = context.audionode.get_sound()
+        sound = context.node.get_sound()
         if sound != None:
             aud.Device().play(sound)
         return {"FINISHED"}

@@ -1,11 +1,12 @@
 import bpy
 import aud
+from .._base.base_node import CM_ND_BaseNode
 
 from ..cm_functions import (
     connected_node_sound,
 )
 
-class CM_ND_AudioDelayNode(bpy.types.Node):
+class CM_ND_AudioDelayNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.delay_node"
     bl_label = "Delay"
     bl_icon = "SPEAKER"
@@ -13,6 +14,7 @@ class CM_ND_AudioDelayNode(bpy.types.Node):
     time_prop : bpy.props.FloatProperty(name="Delay", default=0, min=0, soft_max=10)
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.sound", "Audio")
         self.outputs.new("cm_socket.sound", "Audio")
 

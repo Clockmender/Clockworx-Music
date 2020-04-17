@@ -1,5 +1,11 @@
 import bpy
 import aud
+from bpy.types import (
+    NodeSocketString,
+    NodeSocketFloat,
+    NodeSocketBool,
+)
+from .._base.base_node import CM_ND_BaseNode
 from bpy.props import (
    EnumProperty,
    BoolProperty,
@@ -25,7 +31,7 @@ enum = (
     ("sawtooth", "Sawtooth", "Sawtooth Waveform"),
 )
 
-class CM_ND_AudioFMSynthNode(bpy.types.Node):
+class CM_ND_AudioFMSynthNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.fm_synth"
     bl_label = "FM Synthesiser"
     bl_width_default = 450
@@ -95,27 +101,15 @@ class CM_ND_AudioFMSynthNode(bpy.types.Node):
         layout.label(text=self.message,icon="NONE")
 
     def init(self, context):
-        self.inputs.new("cm_socket.text", "Note") # 0
-        self.inputs.new("cm_socket.float", "Frequency") # 1
-        self.inputs.new("cm_socket.float", "Master Volume") # 2
-        self.inputs.new("cm_socket.float", "Length (B)") # 3
-        self.inputs.new("cm_socket.bool", "Reverse") # 4
-        self.inputs.new("cm_socket.generic", "Note Data")
+        super().init(context)
+        self.inputs.new("cm_socket.note", "Note Data")
         self.outputs.new("cm_socket.sound", "Audio")
 
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
-        sockets = self.inputs.keys()
-        input_values = get_socket_values(self, sockets, self.inputs)
-        input = connected_node_output(self, 5)
+        input = connected_node_output(self, 0)
         if input is None:
-            output = {}
-            output["note_name"] = input_values[0]
-            output["note_freq"] = input_values[1]
-            output["note_vol"] = input_values[2]
-            output["note_dur"] = input_values[3]
-            output["note_rev"] = input_values[4]
-            input = [output]
+            return None
         else:
             if isinstance(input, dict):
                 input = [input]
@@ -124,16 +118,13 @@ class CM_ND_AudioFMSynthNode(bpy.types.Node):
         sound_out = None
         for notes in input:
             data = eval_data(notes)
-            if data[0] == "" and data[1] == 0:
+            if data is None or (data[0] == "" and data[1] == 0):
                 return None
             vol1 = self.vol1 * data[2]
             vol2 = self.vol2 * data[2]
             vol3 = self.vol3 * data[2]
             vol4 = self.vol4 * data[2]
             bps = cm.bpm / 60
-            if data[0] == "":
-                cm.message = "You MUST Give a Note Name"
-                return None
             index = get_index(data[0])
             note_name = get_note(index, 0)
             freq_list = get_chord(note_name, -4)

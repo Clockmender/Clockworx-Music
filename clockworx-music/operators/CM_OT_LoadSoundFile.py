@@ -15,11 +15,10 @@ class CM_OT_LoadSoundFile(bpy.types.Operator):
         cm = context.scene.cm_pg
         path = bpy.path.abspath(cm_node.sound_file_name)
         scene = context.scene
-        offset = offset * (60 / cm.bpm)
         if not scene.sequence_editor:
             scene.sequence_editor_create()
         soundstrip = scene.sequence_editor.sequences.new_sound(
-            "Sound", path, cm_node.sequence_channel, (offset + cm.offset),
+            "Sound", path, cm_node.sequence_channel, cm.offset
         )
         soundstrip.show_waveform = True
         return {"FINISHED"}

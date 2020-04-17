@@ -1,5 +1,6 @@
 import bpy
 import aud
+from .._base.base_node import CM_ND_BaseNode
 from math import pi, cos
 from secrets import randbelow
 from bpy.props import (
@@ -9,7 +10,7 @@ from bpy.props import (
    )
 from ..cm_functions import connected_node_sound
 
-class CM_ND_AudioDopplerNode(bpy.types.Node):
+class CM_ND_AudioDopplerNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.doppler_node"
     bl_label = "Doppler"
     bl_icon = "SPEAKER"
@@ -22,6 +23,7 @@ class CM_ND_AudioDopplerNode(bpy.types.Node):
     post_num : IntProperty(name="Post Sound Number", default=0, min=0)
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.sound", "Audio")
         self.outputs.new("cm_socket.sound", "Audio")
 

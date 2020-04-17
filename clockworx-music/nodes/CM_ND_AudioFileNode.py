@@ -1,8 +1,13 @@
 import bpy
 import aud
+from bpy.types import (
+    NodeSocketFloat,
+    NodeSocketBool,
+)
+from .._base.base_node import CM_ND_BaseNode
 from ..cm_functions import get_socket_values
 
-class CM_ND_AudioFileNode(bpy.types.Node):
+class CM_ND_AudioFileNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.file_node"
     bl_label = "Sound File"
     bl_icon = "SPEAKER"
@@ -10,10 +15,11 @@ class CM_ND_AudioFileNode(bpy.types.Node):
     file_name_prop: bpy.props.StringProperty(subtype="FILE_PATH", name="File", default="//")
 
     def init(self, context):
-        self.inputs.new("cm_socket.float", "Volume")
-        self.inputs.new("cm_socket.float", "Start (B)")
-        self.inputs.new("cm_socket.float", "Length (B)")
-        self.inputs.new("cm_socket.bool", "Reverse")
+        super().init(context)
+        self.inputs.new("NodeSocketFloat", "Volume")
+        self.inputs.new("NodeSocketFloat", "Start (B)")
+        self.inputs.new("NodeSocketFloat", "Length (B)")
+        self.inputs.new("NodeSocketBool", "Reverse")
         self.outputs.new("cm_socket.sound", "Audio")
 
     def draw_buttons(self, context, layout):

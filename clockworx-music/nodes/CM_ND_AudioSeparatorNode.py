@@ -1,11 +1,13 @@
 import bpy
 import aud
+from .._base.base_node import CM_ND_BaseNode
+
 from bpy.props import EnumProperty
 from ..cm_functions import (
     connected_node_sound,
 )
 
-class CM_ND_AudioSeparatorNode(bpy.types.Node):
+class CM_ND_AudioSeparatorNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.separator_node"
     bl_label = "Separator (for Equaliser)"
     bl_icon = "SPEAKER"
@@ -29,6 +31,7 @@ class CM_ND_AudioSeparatorNode(bpy.types.Node):
     )
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.sound", "Audio Collection")
         self.outputs.new("cm_socket.sound", "Audio")
 

@@ -1,4 +1,6 @@
 import bpy
+from .._base.base_node import CM_ND_BaseNode
+
 from bpy.props import (
     BoolProperty,
     StringProperty,
@@ -11,11 +13,11 @@ from ..cm_functions import (
     off_set,
     )
 
-class CM_ND_FloatAnimNode(bpy.types.Node):
-    bl_idname = "cm_audio_float_anim_node"
-    bl_label = "Float Object Animate"
+class CM_ND_MidiFloatAnimNode(bpy.types.Node, CM_ND_BaseNode):
+    bl_idname = "cm_audio.midi_float_anim_node"
+    bl_label = "MIDI Float Object Animate"
     bl_width_default = 150
-    """Animate One Object from Float Data"""
+    """Animate One Object from MIDI Float Data"""
 
     factors : FloatVectorProperty(name="", subtype="XYZ", default=(1,1,1))
     anim_type: EnumProperty(
@@ -40,6 +42,7 @@ class CM_ND_FloatAnimNode(bpy.types.Node):
     use_bones : BoolProperty(name="Use Bones", default=False)
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.midi", "[Key, Control] Data")
         self.inputs.new("cm_socket.object", "Object")
         self.inputs.new("cm_socket.bone", "Bone")
@@ -78,26 +81,54 @@ class CM_ND_FloatAnimNode(bpy.types.Node):
                 num = 1
             else:
                 num = 0
-            values = []
-            values.append(buffer_in[num] * self.factors.x)
-            values.append(buffer_in[num] * self.factors.y)
-            values.append(buffer_in[num] * self.factors.z)
+            values = [buffer_in[num], buffer_in[num], buffer_in[num]]
             vector_delta, euler_delta, scale_delta = off_set(values, self.factors)
 
             if self.use_bones and bone is not None:
                 if self.anim_type == "loc":
-                    bone.location = vector_delta
+                    if self.factors.x != 0:
+                        bone.location.x = vector_delta.x
+                    if self.factors.y != 0:
+                        bone.location.y = vector_delta.y
+                    if self.factors.z != 0:
+                        bone.location.z = vector_delta.z
                 elif self.anim_type == "rot":
-                    bone.rotation_euler = euler_delta
+                    if self.factors.x != 0:
+                        bone.rotation_euler.x = euler_delta.x
+                    if self.factors.y != 0:
+                        bone.rotation_euler.y = euler_delta.y
+                    if self.factors.z != 0:
+                        bone.rotation_euler.z = euler_delta.z
                 else:
-                    bone.scale = scale_delta
+                    if self.factors.x != 0:
+                        bone.scale.x = scale_delta.x
+                    if self.factors.y != 0:
+                        bone.scale.y = scale_delta.y
+                    if self.factors.z != 0:
+                        bone.scale.z = scale_delta.z
+
             elif not self.use_bones and tgt_obj is not None:
                 if self.anim_type == "loc":
-                    tgt_obj.delta_location = vector_delta
+                    if self.factors.x != 0:
+                        tgt_obj.delta_location.x = vector_delta.x
+                    if self.factors.y != 0:
+                        tgt_obj.delta_location.y = vector_delta.y
+                    if self.factors.z != 0:
+                        tgt_obj.delta_location.z = vector_delta.z
                 elif self.anim_type == "rot":
-                    tgt_obj.delta_rotation_euler = euler_delta
+                    if self.factors.x != 0:
+                        tgt_obj.delta_rotation_euler.x = euler_delta.x
+                    if self.factors.y != 0:
+                        tgt_obj.delta_rotation_euler.y = euler_delta.y
+                    if self.factors.z != 0:
+                        tgt_obj.delta_rotation_euler.z = euler_delta.z
                 else:
-                    tgt_obj.delta_scale = scale_delta
+                    if self.factors.x != 0:
+                        tgt_obj.delta_scale.x = scale_delta.x
+                    if self.factors.y != 0:
+                        tgt_obj.delta_scale.y = scale_delta.y
+                    if self.factors.z != 0:
+                        tgt_obj.delta_scale.z = scale_delta.z
 
         return None
 

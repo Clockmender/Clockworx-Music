@@ -1,5 +1,6 @@
 import bpy
 import aud
+from .._base.base_node import CM_ND_BaseNode
 from bpy.props import (
    FloatProperty,
    BoolProperty,
@@ -9,7 +10,7 @@ from ..cm_functions import (
     connected_node_sound,
 )
 
-class CM_ND_AudioIirFirFilter(bpy.types.Node):
+class CM_ND_AudioIirFirFilter(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.iir_fir_node"
     bl_label = "IIR/FIR Filter"
     bl_width_default = 220
@@ -32,6 +33,7 @@ class CM_ND_AudioIirFirFilter(bpy.types.Node):
     filter_n: IntProperty(name="Number of Filter Values", default=6, min=1, max=6)
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.sound", "Audio")
         self.outputs.new("cm_socket.sound", "Audio")
 

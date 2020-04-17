@@ -20,7 +20,7 @@ class CM_OT_WriteAudioNodeOperator(bpy.types.Operator):
         my_file = Path(path)
         if my_file.is_file():
             os.remove(path)
-        sound = context.audionode.get_sound()
+        sound = cm_node.get_sound()
         snd_out = sound.write(path, aud.RATE_16000, aud.CHANNELS_STEREO,
             aud.FORMAT_FLOAT32, aud.CONTAINER_FLAC, aud.CODEC_FLAC)
         if cm_node.add_file:

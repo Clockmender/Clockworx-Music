@@ -1,5 +1,7 @@
 import bpy
 import aud
+from .._base.base_node import CM_ND_BaseNode
+
 from bpy.props import (
    StringProperty,
    IntProperty,
@@ -9,7 +11,7 @@ from bpy.props import (
 from ..cm_functions import connected_node_sound
 
 
-class CM_ND_AudioWriteNode(bpy.types.Node):
+class CM_ND_AudioWriteNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.write_node"
     bl_label = "Speaker: Play/Write"
     bl_icon = "SPEAKER"
@@ -23,6 +25,7 @@ class CM_ND_AudioWriteNode(bpy.types.Node):
     strip_name : StringProperty(name="Strip Name", default="")
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.sound", "Audio")
 
     def get_sound(self):

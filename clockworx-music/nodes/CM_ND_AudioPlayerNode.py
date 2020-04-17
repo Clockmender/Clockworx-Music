@@ -1,15 +1,17 @@
 import bpy
 import aud
+from .._base.base_node import CM_ND_BaseNode
 from ..cm_functions import connected_node_sound
 
 
-class CM_ND_AudioPlayerNode(bpy.types.Node):
+class CM_ND_AudioPlayerNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.player_node"
     bl_label = "Speaker: Automatic"
     bl_icon = "SPEAKER"
     bl_width_default = 180
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.sound", "Audio")
 
     def draw_buttons(self, context, layout):

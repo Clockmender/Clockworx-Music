@@ -1,4 +1,6 @@
 import bpy
+from .._base.base_node import CM_ND_BaseNode
+
 from bpy.props import (
     IntProperty,
     FloatProperty,
@@ -10,7 +12,7 @@ from bpy.props import (
 from ..cm_functions import connected_node_midi
 
 
-class CM_ND_MidiAccumNode(bpy.types.Node):
+class CM_ND_MidiAccumNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio_midi_accum"
     bl_label = "MIDI Accumulator"
     bl_width_default = 150
@@ -20,6 +22,7 @@ class CM_ND_MidiAccumNode(bpy.types.Node):
     con_minus: IntProperty(name="Minus", default=58, min=-1, max=127)
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.midi", "Midi Data")
         self.outputs.new("cm_socket.midi", "[Accumulated Floats]")
 

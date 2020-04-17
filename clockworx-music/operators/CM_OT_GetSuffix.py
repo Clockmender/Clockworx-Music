@@ -10,5 +10,9 @@ class CM_OT_GetSuffix(bpy.types.Operator):
         cm_node = context.node
         obj = context.view_layer.objects.active
         if obj is not None:
-            cm_node.suffix = obj.name.split("_")[1]
+            if "_" in obj.name:
+                if len(obj.name.split("_")) > 1:
+                    cm_node.suffix = obj.name.split("_")[1]
+                    return {"FINISHED"}
+        self.report({"ERROR"}, "No Object Selected, or Invalid Object Name")
         return {"FINISHED"}

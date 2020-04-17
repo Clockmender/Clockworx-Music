@@ -1,11 +1,13 @@
 import bpy
+from .._base.base_node import CM_ND_BaseNode
+
 import pygame.midi as pgm
 from bpy.props import (
     IntProperty,
     BoolProperty,
     )
 
-class CM_ND_MidiInitNode(bpy.types.Node):
+class CM_ND_MidiInitNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio_midi_init_node"
     bl_label = "MIDI RealTime Data"
     bl_width_default = 150
@@ -50,6 +52,7 @@ class CM_ND_MidiInitNode(bpy.types.Node):
         # By now we should have a number for valid Midi Inputs
 
     def init(self, context):
+        super().init(context)
         self.outputs.new("cm_socket.midi", "Midi Data")
 
     def draw_buttons(self, context, layout):

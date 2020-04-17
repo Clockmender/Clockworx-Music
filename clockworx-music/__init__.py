@@ -56,6 +56,7 @@ from bpy.props import (
     StringProperty,
     BoolProperty,
     EnumProperty,
+    FloatVectorProperty,
 )
 
 
@@ -66,6 +67,8 @@ class AudioNodeTree(bpy.types.NodeTree):
     bl_label = "Clockworx Music Editor"
     bl_options = {"REGISTER", "UNDO"}
 
+    new_links = []
+
     def get_tree(self):
         return self.id_data
 
@@ -75,14 +78,26 @@ class AudioNodeTree(bpy.types.NodeTree):
         for socket in self.outputs:
             socket.update_value(None)
 
+        # Check Connections
+        for link in self.new_links:
+            if (
+                link.from_socket.bl_idname != "cm_socket.generic"
+                and link.to_socket.bl_idname != "cm_socket.generic"
+                ):
+                if link.from_socket.bl_idname != link.to_socket.bl_idname:
+                    self.links.remove(link)
+        self.new_links.clear()
+
 
 class CMSceneProperties(PropertyGroup):
     """Contains all CM related properties."""
 
+    error : StringProperty(name="Error", default="")
     bpm : IntProperty(name="BPM", default=60)
     time_sig_num : IntProperty(name="Time Sig N", default=4)
     time_sig_den : IntProperty(name="Time Sig D", default=4)
-    #note_den : IntProperty(name="Note Denom.",min=1, default=16, max=64)
+    bar_len : FloatProperty(name="bar_len", default=0, min=0)
+    note_pos : FloatVectorProperty(name="Note Position", subtype="XYZ", default=(0,0,0))
     note_den : EnumProperty(
         items=(
             ("1", "1", "1 Beat"),
@@ -109,7 +124,8 @@ class CMSceneProperties(PropertyGroup):
     channels : StringProperty()
     message : StringProperty(name="")
     message1 : StringProperty(name="")
-    col_name : StringProperty(name="Collection", default="")
+    col_name : StringProperty(name="Collection Objects", default="")
+    con_name : StringProperty(name="Collection Controls", default="")
     suffix_obj : StringProperty(name="Suffix", default="key")
     bridge_len : FloatProperty(name = "Bridge Length", min=0.5,max=1.0)
     scale_f : FloatProperty(name = "Scale Factor", min=0.5, max=1)
@@ -144,20 +160,32 @@ class CMSceneProperties(PropertyGroup):
     midi_debug : BoolProperty(name="Debug", default=False,
         description="Output MIDI Buffer to Console")
 
+    # for sound
+    enumI = []
+    streams = {}
+
 
 class AudioSetupNodeCategory(NodeCategory):
     @classmethod
     def poll(cls, context):
-        return context.space_data.tree_type == "AudioNodeTree"
+        return context.space_data.tree_type == "cm_AudioNodeTree"
 
+class AudioEditNodeCategory(NodeCategory):
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == "cm_AudioNodeTree"
 
 class AudioPropertiesNodeCategory(NodeCategory):
     @classmethod
     def poll(cls, context):
         return context.space_data.tree_type == "cm_AudioNodeTree"
 
+class AudioInputNodeCategory(NodeCategory):
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == "cm_AudioNodeTree"
 
-class AudioIONodeCategory(NodeCategory):
+class AudioOuputNodeCategory(NodeCategory):
     @classmethod
     def poll(cls, context):
         return context.space_data.tree_type == "cm_AudioNodeTree"
@@ -186,45 +214,68 @@ class AudioObjectNodeCategory(NodeCategory):
 
 
 categories = [
-    AudioIONodeCategory("AUDIO_SETUP_CATEGORY", "Setup", items = [
+    AudioSetupNodeCategory("AUDIO_SETUP_CATEGORY", "Setup", items = [
         NodeItem("cm_audio.midi_analyse_node"),
         NodeItem("cm_audio.midi_bake_node"),
         NodeItem("cm_audio_midi_init_node"),
         NodeItem("cm_audio_midi_accum"),
         NodeItem("cm_audio_midi_midi_handler"),
+        NodeItem("cm_audio_sound_bake_node"),
+        NodeItem("cm_audio.render_node"),
+    ]),
+    AudioEditNodeCategory("AUDIO_EDIT_CATEGORY", "Edit & Utility Tools", items = [
+        NodeItem("cm_audio.bounce_node"),
+        NodeItem("cm_audio.colour_material_node"),
+        NodeItem("cm_audio.compare_node"),
+        NodeItem("cm_audio.condition_node"),
+        NodeItem("cm_audio.logic_node"),
+        NodeItem("cm_audio.maths_node"),
+        NodeItem("cm_audio.max_min_node"),
+        NodeItem("cm_audio.trigger_node"),
+        NodeItem("cm_audio_note_edit_node"),
+        NodeItem("cm_audio.trig_node"),
     ]),
     AudioPropertiesNodeCategory("AUDIO_PROP_CATEGORY", "Constants & Info", items = [
         NodeItem("cm_audio.beats_node"),
         NodeItem("cm_audio.debug_node"),
         NodeItem("cm_audio.frame_node"),
-        NodeItem("cm_audio.info_node"),
         NodeItem("cm_audio.midi_note_node"),
+        NodeItem("cm_audio.info_node"),
         NodeItem("cm_audio.sound_info_node"),
         NodeItem("cm_audio.time_node"),
     ]),
-    AudioIONodeCategory("AUDIO_IO_CATEGORY", "Inputs & Outputs", items = [
+    AudioInputNodeCategory("AUDIO_INPUT_CATEGORY", "Inputs", items = [
+        NodeItem("cm_audio.bones_node"),
         NodeItem("cm_audio.bool_node"),
+        NodeItem("cm_audio.collections_node"),
+        NodeItem("cm_audio.collections_filter_node"),
+        NodeItem("cm_audio.colour_node"),
+        NodeItem("cm_audio.colour_rgba_node"),
+        NodeItem("cm_audio.file_node"),
         NodeItem("cm_audio.float_node"),
+        NodeItem("cm_audio.frame_ramp_node"),
         NodeItem("cm_audio.int_node"),
-        NodeItem("cm_audio.text_node"),
+        NodeItem("cm_audio.material_node"),
         NodeItem("cm_audio.note_node"),
         NodeItem("cm_audio.object_note_node"),
-        NodeItem("cm_audio.file_node"),
+        NodeItem("cm_audio.objects_node"),
+        NodeItem("cm_audio.objects__filter_node"),
+        NodeItem("cm_audio.shapekey_node"),
+        NodeItem("cm_audio.text_node"),
+    ]),
+    AudioOuputNodeCategory("AUDIO_OUTPUT_CATEGORY", "Outputs", items = [
         NodeItem("cm_audio.player_node"),
         NodeItem("cm_audio.output_node"),
         NodeItem("cm_audio.object_sound_node"),
         NodeItem("cm_audio.write_node"),
-        NodeItem("cm_audio.collections_node"),
-        NodeItem("cm_audio.objects_node"),
     ]),
     AudioOSCNodeCategory("AUDIO_OSC_CATEGORY", "Oscillators", items = [
         NodeItem("cm_audio.arpeggio_node"),
         NodeItem("cm_audio.chord_node"),
         NodeItem("cm_audio.fm_synth"),
-        NodeItem("cm_audio.sound_node"),
+        NodeItem("cm_audio.tone_node"),
     ]),
     AudioFilterNodeCategory("AUDIO_FILTER_CATEGORY", "Filters", items = [
-    # Commented out don't work with Blender < 2.8
         NodeItem("cm_audio.accumulator_node"),
         NodeItem("cm_audio.compressor_node"),
         NodeItem("cm_audio.delay_node"),
@@ -255,11 +306,13 @@ categories = [
         NodeItem("cm_audio.mix_node"),
         NodeItem("cm_audio.pingpong_node"),
     ]),
-    AudioSequenceNodeCategory("AUDIO_OBJECT_CATEGORY", "Objects", items = [
-        NodeItem("cm_audio.object_loc_node"),
+    AudioObjectNodeCategory("AUDIO_OBJECT_CATEGORY", "Animate", items = [
         NodeItem("cm_audio.piano_roll_node"),
-        NodeItem("cm_audio_float_anim_node"),
+        NodeItem("cm_audio.midi_float_anim_node"),
         NodeItem("cm_audio_midi_anim_node"),
+        NodeItem("cm_audio.object_loc_node"),
+        NodeItem("cm_audio.object_float_anim_node"),
+        NodeItem("cm_audio.shapekey_anim_node"),
     ]),
 ]
 

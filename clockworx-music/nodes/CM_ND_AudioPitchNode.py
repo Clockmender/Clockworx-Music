@@ -1,12 +1,13 @@
 import bpy
 import aud
+from .._base.base_node import CM_ND_BaseNode
 
 from ..cm_functions import (
     connected_node_sound,
 )
 
 
-class CM_ND_AudioPitchNode(bpy.types.Node):
+class CM_ND_AudioPitchNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.pitch_node"
     bl_label = "Pitch"
     bl_icon = "SPEAKER"
@@ -14,6 +15,7 @@ class CM_ND_AudioPitchNode(bpy.types.Node):
     pitch_prop : bpy.props.FloatProperty(name="Pitch", default=1, soft_min=0.1, soft_max=4)
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.sound", "Audio")
         self.outputs.new("cm_socket.sound", "Audio")
 

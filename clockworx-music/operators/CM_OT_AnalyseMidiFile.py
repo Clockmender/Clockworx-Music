@@ -19,7 +19,7 @@ class CM_OT_AnalyseMidiFile(bpy.types.Operator):
         cm_node.pulse = cm.data_dict["Pulse"]
         cm_node.bpm = cm.data_dict["BPM"]
         cm_node.tempo = int(cm.data_dict["Tempo"][0][1])
-        cm_node.time_sig = f"{cm.data_dict['TimeSig'][0]}:{cm.data_dict['TimeSig'][0]}"
+        cm_node.time_sig = f"{cm.data_dict['TimeSig'][0]}:{cm.data_dict['TimeSig'][1]}"
         cm_node.track_name = cm.data_dict['Track Name']
         first = True
         for v in range(len(cm.data_dict['Tracks'])):

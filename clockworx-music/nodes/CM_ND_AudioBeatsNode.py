@@ -1,7 +1,8 @@
 import bpy
+from bpy.types import NodeSocketFloat
+from .._base.base_node import CM_ND_BaseNode
 
-
-class CM_ND_AudioBeatsNode(bpy.types.Node):
+class CM_ND_AudioBeatsNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.beats_node"
     bl_label = "Beats Info"
     bl_icon = "SPEAKER"
@@ -9,7 +10,7 @@ class CM_ND_AudioBeatsNode(bpy.types.Node):
     beats_num: bpy.props.FloatProperty(name="Beats")
 
     def init(self, context):
-        self.outputs.new("cm_socket.float", "Beats")
+        self.outputs.new("NodeSocketFloat", "Beats")
 
     def execute(self):
         cm = bpy.context.scene.cm_pg

@@ -1,5 +1,7 @@
 import bpy
+from .._base.base_node import CM_ND_BaseNode
 from mathutils import Vector
+
 from bpy.props import (
     StringProperty,
     IntProperty,
@@ -14,7 +16,7 @@ from ..cm_functions import (
     get_index,
 )
 
-class CM_ND_NoteEditNode(bpy.types.Node):
+class CM_ND_NoteEditNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio_note_edit_node"
     bl_label = "Edit Pianoroll"
     bl_width_default = 300
@@ -74,6 +76,7 @@ class CM_ND_NoteEditNode(bpy.types.Node):
         split.label(text="Offset by 'Bar'&'Octave'")
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.collection", "Collection")
         self.outputs.new("cm_socket.generic", "Note Info")
 

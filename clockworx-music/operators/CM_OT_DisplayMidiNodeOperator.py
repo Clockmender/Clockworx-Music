@@ -6,8 +6,12 @@ class CM_OT_DisplayMidiNodeOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return True
+        node = context.node
+        if hasattr(node, "get_midi"):
+            return True
+        else:
+            return False
 
     def execute(self, context):
-        context.audionode.get_midi()
+        context.node.get_midi()
         return {"FINISHED"}

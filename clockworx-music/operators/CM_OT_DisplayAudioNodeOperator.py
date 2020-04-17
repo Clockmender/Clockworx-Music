@@ -6,8 +6,12 @@ class CM_OT_DisplayAudioNodeOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return True
+        node = context.node
+        if hasattr(node, "info"):
+            return True
+        else:
+            return False
 
     def execute(self, context):
-        context.audionode.info(context)
+        context.node.info(context)
         return {"FINISHED"}

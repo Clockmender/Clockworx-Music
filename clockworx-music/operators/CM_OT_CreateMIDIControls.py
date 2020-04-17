@@ -16,6 +16,12 @@ class CM_OT_CreateMIDIControls(bpy.types.Operator):
 
     def execute(self, context):
         cm_node = context.node
+        input = cm_node.function()
+        if "collections" in input.keys():
+            collection = input["collections"]
+            if collection is not None:
+                layer_collection = bpy.context.view_layer.layer_collection.children[collection.name]
+                bpy.context.view_layer.active_layer_collection = layer_collection
         cm = context.scene.cm_pg
         path = bpy.path.abspath(cm_node.midi_file_name)
         analyse_midi_file(context)
@@ -81,9 +87,6 @@ class CM_OT_CreateMIDIControls(bpy.types.Operator):
                         type="SINGLE_ARROW", location=(xLoc, int(channel) / 10, 0), radius=0.03
                     )
                     bpy.context.active_object.name = f"{str(k)}_{cm_node.suffix}{channel}"
-                    #(
-                    #    str(k) + "_" + cm_node.suffix + channel
-                    #)
                     if cm_node.label_cont:
                         bpy.context.active_object.show_name = True
                     indV = True
@@ -105,11 +108,6 @@ class CM_OT_CreateMIDIControls(bpy.types.Operator):
                     xLoc = xLoc + 0.1
                 cm_node.message1 = "Process Complete"
                 max = max + sum(len(v) for v in cm.event_dict.values())
-            cm_node.message2 = (
-                "Channel "
-                + cm.channels
-                + " Processed, Events: "
-                + str(max)
-            )
+            cm_node.message2 = f"Channel(s): {channel_list} Processed, Events: {max}"
 
         return {"FINISHED"}

@@ -1,4 +1,6 @@
 import bpy
+from .._base.base_node import CM_ND_BaseNode
+
 from bpy.props import (
     StringProperty,
     IntProperty,
@@ -8,9 +10,9 @@ from ..cm_functions import (
     oops,
 )
 
-class CM_ND_BonesNode(bpy.types.Node):
+class CM_ND_BonesNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.bones_node"
-    bl_label = "Bone Input"
+    bl_label = "Bone"
     bl_icon = "SPEAKER"
 
     bone : StringProperty(name="Bone", default="")
@@ -19,12 +21,15 @@ class CM_ND_BonesNode(bpy.types.Node):
         layout.prop(self, "bone")
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.object", "Armature")
         self.outputs.new("cm_socket.bone", "Bone")
 
     def execute(self):
         cm = bpy.context.scene.cm_pg
         input = connected_node_output(self, 0)
+        if input == None:
+            return None
         if isinstance(input, dict):
             if "objects" in input.keys():
                 objects = input["objects"]
@@ -40,6 +45,7 @@ class CM_ND_BonesNode(bpy.types.Node):
                         return None
             else:
                 cm.error = "Input is not an Object"
+                bpy.context.window_manager.popup_menu(oops, title="Error", icon="ERROR")
                 return None
 
             bone_list = [b for b in object.pose.bones if self.bone in b.name]

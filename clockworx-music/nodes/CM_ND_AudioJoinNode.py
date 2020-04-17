@@ -1,17 +1,19 @@
 import bpy
 import aud
+from .._base.base_node import CM_ND_BaseNode
 
 from ..cm_functions import (
     connected_node_sound,
 )
 
 
-class CM_ND_AudioJoinNode(bpy.types.Node):
+class CM_ND_AudioJoinNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.join_node"
     bl_label = "Join"
     bl_icon = "SPEAKER"
 
     def init(self, context):
+        super().init(context)
         self.inputs.new("cm_socket.sound", "Audio 1")
         self.inputs.new("cm_socket.sound", "Audio 2")
         self.outputs.new("cm_socket.sound", "Audio")

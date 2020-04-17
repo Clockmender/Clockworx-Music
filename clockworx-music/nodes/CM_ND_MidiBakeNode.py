@@ -1,14 +1,20 @@
 import bpy
+from .._base.base_node import CM_ND_BaseNode
+
 from bpy.props import (
     IntProperty,
     FloatProperty,
     StringProperty,
     BoolProperty,
     EnumProperty,
-    )
+)
+from ..cm_functions import (
+    connected_node_output,
+    get_note,
+)
 
 
-class CM_ND_MidiBakeNode(bpy.types.Node):
+class CM_ND_MidiBakeNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.midi_bake_node"
     bl_label = "MIDI Bake"
     bl_icon = "SPEAKER"
@@ -37,12 +43,18 @@ class CM_ND_MidiBakeNode(bpy.types.Node):
     midi_file_name : StringProperty(subtype="FILE_PATH", name="Midi CSV file", default="//")
     sound_file_name : StringProperty(subtype="FILE_PATH", name="Sound file", default="//")
     write_name : StringProperty(subtype="FILE_PATH", name="Ouptut File Name", default="//")
-    sequence_channel : IntProperty(name="Channel", default=1, description="VSE Channel")
+    sequence_channel : IntProperty(name="VSE Channel", default=1, description="VSE Channel")
     add_file : BoolProperty(name="Add to VSE", default=False)
     strip_name : StringProperty(name="Strip Name", default="")
     volume : FloatProperty(name="Volume", default=1.0)
-    make_all : BoolProperty(name="All Channels", default=False)
+    make_all : BoolProperty(name="Process All Channels", default=False)
     label_cont : BoolProperty(name="Label Controls", default=False)
+
+    def init(self, context):
+        super().init(context)
+        self.inputs.new("cm_socket.collection", "Collection")
+        self.inputs.new("cm_socket.material", "Material")
+        self.outputs.new("cm_socket.generic", "Data")
 
     def draw_buttons(self, context, layout):
         cm_pg = context.scene.cm_pg
@@ -86,8 +98,44 @@ class CM_ND_MidiBakeNode(bpy.types.Node):
         split.label(text="")
         split.operator("cm_audio.load_sound", icon="FILE_NEW")
 
+        layout.separator()
+        row = layout.row()
+        split = row.split(factor=0.3, align=True)
+        split.label(text="")
+        split.operator("cm_audio.create_daw_notes", icon="FILE_NEW")
+
         layout.label(text="")
         if self.message1 != "":
             layout.label(text=self.message1, icon="INFO")
         if self.message2 != "":
             layout.label(text=self.message2, icon="INFO")
+
+    def function(self):
+        cm = bpy.context.scene.cm_pg
+        input_1 = connected_node_output(self, 0)
+        if isinstance(input_1, dict):
+            if "collections" in input_1.keys():
+                collections = input_1["collections"]
+                if not isinstance(collections, list):
+                    collection = collections
+                else:
+                    collection = None
+        else:
+            collection = None
+        input_2 = connected_node_output(self, 1)
+        if isinstance(input_2, dict):
+            if "material" in input_2.keys():
+                material = input_2["material"]
+        else:
+            material = None
+        output = {}
+        output["collections"] = collection
+        output["midi_file"] = self.midi_file_name
+        output["sound_file"] = self.sound_file_name
+        output["write_file"] = self.write_name
+        output["material"] = material
+        output["event_dict"] = cm.event_dict
+        return output
+
+    def output(self):
+        return self.function()

@@ -1,10 +1,12 @@
 import bpy
+from .._base.base_node import CM_ND_BaseNode
+
 from bpy.props import (
     IntProperty,
     StringProperty,
     )
 
-class CM_ND_MidiAnalyseNode(bpy.types.Node):
+class CM_ND_MidiAnalyseNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.midi_analyse_node"
     bl_label = "MIDI Analyser"
     bl_icon = "SPEAKER"
@@ -20,6 +22,7 @@ class CM_ND_MidiAnalyseNode(bpy.types.Node):
 
 
     def init(self, context):
+        super().init(context)
         self.outputs.new("cm_socket.generic", "File Info")
 
     def draw_buttons(self, context, layout):
