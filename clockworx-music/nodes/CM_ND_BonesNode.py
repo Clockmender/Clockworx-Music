@@ -53,8 +53,11 @@ class CM_ND_BonesNode(bpy.types.Node, CM_ND_BaseNode):
                 bone = bone_list[0]
                 cm.message = f"'{object.name}'-'{bone.name}' Returned"
                 return {"bones": bone}
+            elif len(bone_list) > 1:
+                cm.message = f"List of Bones Returned"
+                return{"bones": bone_list}
             else:
-                cm.error = f"More Than 1, or No Bone Found"
+                cm.error = f"No Bone Found"
                 bpy.context.window_manager.popup_menu(oops, title="Error", icon="ERROR")
                 return None
 

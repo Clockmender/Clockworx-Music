@@ -18,13 +18,15 @@ class CM_ND_ColorMaterial(bpy.types.Node, CM_ND_BaseNode):
         cm = bpy.context.scene.cm_pg
         sockets = self.inputs.keys()
         input_values = get_socket_values(self, sockets, self.inputs)
-        colour = input_values[0]
-        if colour is None:
-            input = connected_node_output(self, 0)
+        input = connected_node_output(self, 0)
+        if input is not None:
             colour = input["colour"]
+        else:
+            colour = input_values[0]
         material = input_values[1]
-        material.node_tree.nodes["Principled BSDF"].inputs[0].default_value = colour
-        material.diffuse_color = colour
+        if colour is not None:
+            material.node_tree.nodes["Principled BSDF"].inputs[0].default_value = colour
+            material.diffuse_color = colour
 
     def output(self):
         return self.execute()

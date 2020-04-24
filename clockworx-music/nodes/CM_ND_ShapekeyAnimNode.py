@@ -53,6 +53,9 @@ class CM_ND_ShapekeyAnimNode(bpy.types.Node, CM_ND_BaseNode):
         if isinstance(input_2, dict):
             if "sk-basis" in input_2.keys():
                 key_list = [k for k in input_2.keys() if "key" in k]
+                if len(key_list) < 1:
+                    self.message = "No control keys found"
+                    return None
 
         if not self.animate_group and key_list is not None and con_obj is not None:
             search = con_obj.name.split("_")[0]
@@ -61,14 +64,20 @@ class CM_ND_ShapekeyAnimNode(bpy.types.Node, CM_ND_BaseNode):
             if len(key_list) == 1:
                 input_2[key_list[0]].value = value
 
-        elif self.animate_group and key_list is not None:
-            self.message = "Using List of Controls"
-            for obj in objects:
-                if "_" in obj.name:
-                    value = off_set(obj)
-                    note_name = obj.name.split("_")[0]
-                    key = f"key-{note_name}"
-                    input_2[key].value = value
+        elif self.animate_group and key_list is not None and objects is not None:
+            if len(key_list) == len(objects):
+                self.message = "Using List of Controls"
+                for obj in objects:
+                    if "_" in obj.name:
+                        value = off_set(obj)
+                        note_name = obj.name.split("_")[0]
+                        key = f"key-{note_name}"
+                        if key in input_2.keys():
+                            input_2[key].value = value
+                        else:
+                            self.message = f"{key} not found"
+            else:
+                self.message = "Number of Keys & Controls Don't Match"
 
 
 

@@ -1,20 +1,18 @@
 import bpy
-from bpy.types import NodeSocketInt
+from bpy.types import NodeSocketFloat
 from .._base.base_node import CM_ND_BaseNode
+from bpy.props import BoolProperty
 
 class CM_ND_AudioFrameNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.frame_node"
     bl_label = "Frame No"
     bl_icon = "SPEAKER"
 
-    frame_num: bpy.props.IntProperty(name="Frame")
-
     def init(self, context):
-        self.outputs.new("NodeSocketInt", "Frame")
+        self.outputs.new("NodeSocketFloat", "Frame")
 
     def execute(self):
-        self.frame_num = bpy.context.scene.frame_current
-        return {"int": self.frame_num}
+        return {"float": float(bpy.context.scene.frame_current)}
 
     def output(self):
         return self.execute()

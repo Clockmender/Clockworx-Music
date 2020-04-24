@@ -18,7 +18,7 @@ class CM_ND_AudioBeatsNode(bpy.types.Node, CM_ND_BaseNode):
         fps = bpy.context.scene.render.fps / bpy.context.scene.render.fps_base
         frame = bpy.context.scene.frame_current
         self.beats_num = round((((frame - cm.offset) / fps) * bps), 3)
-        return {"beats": self.beats_num}
+        return {"float": self.beats_num}
 
     def output(self):
         return self.execute()
