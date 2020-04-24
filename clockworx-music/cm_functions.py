@@ -24,6 +24,7 @@
 import aud
 import bpy
 import os
+import numpy as np
 from mathutils import Quaternion, Vector, Euler
 from math import pi, fsum
 
@@ -236,6 +237,30 @@ def analyse_midi_file(context):
     cm_node.message2 = "Midi CSV File Analysed and Data Dictionary Built"
     return
 
+def euler_to_quaternion(roll, pitch, yaw):
+    """Converts Euler Rotation to Quaternion Rotation.
+
+    Args:
+        roll: Roll in Euler rotation
+        pitch: Pitch in Euler rotation
+        yaw: Yaw in Euler rotation
+
+    Returns:
+        Quaternion Rotation.
+    """
+
+    # fmt: off
+    quat_x = (np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2)
+              - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2))
+    quat_y = (np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+              + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2))
+    quat_z = (np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+              - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2))
+    quat_w = (np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2)
+              + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2))
+    # fmt: on
+    return Quaternion((quat_w, quat_x, quat_y, quat_z))
+
 
 note_list = [
     'c0','cs0','d0','ds0','e0','f0','fs0','g0','gs0','a0','as0','b0',
@@ -372,3 +397,33 @@ def osc_generate(input_values, gen_type, samples):
     else:
         sound = aud.Sound.silence().resample(samples, False)
     return sound
+
+# Guitar Section:
+# 6 String Fret List
+fret_list_six = [
+    'NUT','F1','F2','F3','F4',
+    'NUT','F1','F2','F3','F4',
+    'NUT','F1','F2','F3','F4',
+    'NUT','F1','F2','F3',
+    'NUT','F1','F2','F3','F4',
+    'NUT','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
+    'F13','F14','F15','F16','F17','F18','F19','F20','F21','F22','F23','F24']
+# Bass Fret List
+fret_list_four = [
+    'NUT','F1','F2','F3','F4',
+    'NUT','F1','F2','F3','F4',
+    'NUT','F1','F2','F3','F4',
+    'NUT','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
+    'F13','F14','F15','F16','F17','F18','F19','F20','F21','F22','F23','F24']
+
+def get_fret_six(note_idx, off_set):
+    if (note_idx + off_set) < len(fret_list_six):
+        return fret_list_six[note_idx + off_set]
+    else:
+        return None
+
+def get_fret_four(note_idx, off_set):
+    if (note_idx + off_set) < len(fret_list_four):
+        return fret_list_four[note_idx + off_set]
+    else:
+        return None

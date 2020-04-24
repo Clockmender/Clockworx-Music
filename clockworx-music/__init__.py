@@ -48,7 +48,7 @@ import addon_utils
 import importlib
 import nodeitems_utils
 from nodeitems_utils import NodeItem, NodeCategory
-from bpy.types import PropertyGroup, Scene
+from bpy.types import PropertyGroup, Scene, Object, Collection
 from bpy.props import (
     IntProperty,
     FloatProperty,
@@ -124,8 +124,8 @@ class CMSceneProperties(PropertyGroup):
     channels : StringProperty()
     message : StringProperty(name="")
     message1 : StringProperty(name="")
-    col_name : StringProperty(name="Collection Objects", default="")
-    con_name : StringProperty(name="Collection Controls", default="")
+    col_name : PointerProperty(name="Objects Collection", type=Collection)
+    con_name : PointerProperty(name="Controls Collection", type=Collection)
     suffix_obj : StringProperty(name="Suffix", default="key")
     bridge_len : FloatProperty(name = "Bridge Length", min=0.5,max=1.0)
     scale_f : FloatProperty(name = "Scale Factor", min=0.5, max=1)
@@ -163,6 +163,26 @@ class CMSceneProperties(PropertyGroup):
     # for sound
     enumI = []
     streams = {}
+
+    # For Trig Waves
+    trig_type : EnumProperty(
+        items=(
+            ("sin", "Sine", "Sine Wave"),
+            ("cos", "Cosine", "Cosine Wave"),
+            ("tan", "Tangent", "Tangent Wave"),
+        ),
+        name="Wave Form",
+        default="sin",
+        description="Wave Form",
+    )
+    trig_cycles : IntProperty(name="Cycles #", default=1, min=1)
+    trig_amp : FloatProperty(name="Amplitude", default=1, min=0.01)
+    trig_len : FloatProperty(name="Cycle Length", default=2, min=0.02)
+    trig_obj : PointerProperty(name="Object", type=Object)
+    trig_del : BoolProperty(name="Empty Object", default=False)
+    trig_res : IntProperty(name="Resolution", default=18, min=4, max=72)
+    trig_tanmax : FloatProperty(name="Tangent Max", default=10, min=0.1)
+    trig_off : FloatVectorProperty(name="Start Loc", default=(0,0,0))
 
 
 class AudioSetupNodeCategory(NodeCategory):
@@ -215,22 +235,26 @@ class AudioObjectNodeCategory(NodeCategory):
 
 categories = [
     AudioSetupNodeCategory("AUDIO_SETUP_CATEGORY", "Setup", items = [
+        NodeItem("cm_audio.midi_guitar_info_node"),
+        NodeItem("cm_audio.midi_guitar_note_node"),
         NodeItem("cm_audio.midi_analyse_node"),
         NodeItem("cm_audio.midi_bake_node"),
         NodeItem("cm_audio_midi_init_node"),
         NodeItem("cm_audio_midi_accum"),
         NodeItem("cm_audio_midi_midi_handler"),
-        NodeItem("cm_audio_sound_bake_node"),
         NodeItem("cm_audio.render_node"),
+        NodeItem("cm_audio_sound_bake_node"),
     ]),
     AudioEditNodeCategory("AUDIO_EDIT_CATEGORY", "Edit & Utility Tools", items = [
         NodeItem("cm_audio.bounce_node"),
-        NodeItem("cm_audio.colour_material_node"),
         NodeItem("cm_audio.compare_node"),
         NodeItem("cm_audio.condition_node"),
+        NodeItem("cm_audio.in_range_node"),
         NodeItem("cm_audio.logic_node"),
+        NodeItem("cm_audio.colour_material_node"),
         NodeItem("cm_audio.maths_node"),
         NodeItem("cm_audio.max_min_node"),
+        NodeItem("cm_audio.frame_seq_node"),
         NodeItem("cm_audio.trigger_node"),
         NodeItem("cm_audio_note_edit_node"),
         NodeItem("cm_audio.trig_node"),
@@ -251,7 +275,6 @@ categories = [
         NodeItem("cm_audio.collections_filter_node"),
         NodeItem("cm_audio.colour_node"),
         NodeItem("cm_audio.colour_rgba_node"),
-        NodeItem("cm_audio.file_node"),
         NodeItem("cm_audio.float_node"),
         NodeItem("cm_audio.frame_ramp_node"),
         NodeItem("cm_audio.int_node"),
@@ -261,6 +284,7 @@ categories = [
         NodeItem("cm_audio.objects_node"),
         NodeItem("cm_audio.objects__filter_node"),
         NodeItem("cm_audio.shapekey_node"),
+        NodeItem("cm_audio.file_node"),
         NodeItem("cm_audio.text_node"),
     ]),
     AudioOuputNodeCategory("AUDIO_OUTPUT_CATEGORY", "Outputs", items = [
@@ -307,6 +331,7 @@ categories = [
         NodeItem("cm_audio.pingpong_node"),
     ]),
     AudioObjectNodeCategory("AUDIO_OBJECT_CATEGORY", "Animate", items = [
+        NodeItem("cm_audio.midi_guitar_play_node"),
         NodeItem("cm_audio.piano_roll_node"),
         NodeItem("cm_audio.midi_float_anim_node"),
         NodeItem("cm_audio_midi_anim_node"),
