@@ -249,6 +249,7 @@ categories = [
         NodeItem("cm_audio.bounce_node"),
         NodeItem("cm_audio.compare_node"),
         NodeItem("cm_audio.condition_node"),
+        NodeItem("cm_audio.loop_node"),
         NodeItem("cm_audio.in_range_node"),
         NodeItem("cm_audio.logic_node"),
         NodeItem("cm_audio.colour_material_node"),
@@ -288,6 +289,8 @@ categories = [
         NodeItem("cm_audio.text_node"),
     ]),
     AudioOuputNodeCategory("AUDIO_OUTPUT_CATEGORY", "Outputs", items = [
+        NodeItem("cm_audio.loop_file_node"),
+        NodeItem("cm_audio.record_node"),
         NodeItem("cm_audio.player_node"),
         NodeItem("cm_audio.output_node"),
         NodeItem("cm_audio.object_sound_node"),
