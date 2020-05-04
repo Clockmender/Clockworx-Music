@@ -30,5 +30,7 @@ class CM_ND_BaseNode:
             self.color = (0.1, 0.4, 0.1)
         elif "material_" in self.bl_idname:
             self.color = (0.1, 0.25, 0.35)
+        elif "record" in self.bl_idname:
+            self.color = (0.5, 0.1, 0.1)
         else:
             self.color = (0.4, 0.35, 0.3)
