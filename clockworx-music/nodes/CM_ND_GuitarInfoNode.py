@@ -29,7 +29,6 @@ class CM_ND_GuitarInfoNode(bpy.types.Node, CM_ND_BaseNode):
         self.outputs.new("cm_socket.guitar", "Guitar Data")
 
     def execute(self):
-        cm = bpy.context.scene.cm_pg
         output = {}
         Idx = connected_node_output(self, 0)
         if Idx is not None:

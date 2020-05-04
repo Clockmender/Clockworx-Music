@@ -12,7 +12,7 @@ from ..cm_functions import (
 
 class CM_ND_BonesNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.bones_node"
-    bl_label = "Bone"
+    bl_label = "Bone(s): Filtered"
     bl_icon = "SPEAKER"
 
     bone : StringProperty(name="Bone", default="")

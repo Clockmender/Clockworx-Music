@@ -69,9 +69,9 @@ class CM_ND_AudioFMSynthNode(bpy.types.Node, CM_ND_BaseNode):
     vol3      : FloatProperty(name="Vol 3",default=1,min=0,max=2)
     vol4      : FloatProperty(name="Vol 4",default=1,min=0,max=2)
     #sto1      : FloatProperty(name="Off 1",default=0,min=0,max=1)
-    sto2      : FloatProperty(name="Del 2",default=0,min=0,max=1)
-    sto3      : FloatProperty(name="Del 3",default=0,min=0,max=1)
-    sto4      : FloatProperty(name="Del 4",default=0,min=0,max=1)
+    sto2      : FloatProperty(name="Del 2",default=0,min=0,max=1,precision=3)
+    sto3      : FloatProperty(name="Del 3",default=0,min=0,max=1,precision=3)
+    sto4      : FloatProperty(name="Del 4",default=0,min=0,max=1,precision=3)
 
     def draw_buttons(self, context, layout):
         row = layout.row()

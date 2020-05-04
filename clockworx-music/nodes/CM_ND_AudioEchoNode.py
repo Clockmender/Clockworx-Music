@@ -11,7 +11,7 @@ class CM_ND_AudioEchoNode(bpy.types.Node, CM_ND_BaseNode):
     bl_label = "Echo"
     bl_icon = "SPEAKER"
 
-    time_prop : bpy.props.FloatProperty(name="Delay", default=0, min=0, soft_max=10)
+    time_prop : bpy.props.FloatProperty(name="Delay", default=0, min=0, soft_max=10, precision=3)
     echo_num : bpy.props.IntProperty(name="Echos #", default=4, min=1, max=10)
     factor : bpy.props.FloatProperty(name="Decay Factor", default=0.2, min=0.001, max=0.5)
     volume : bpy.props.FloatProperty(name="Volume", default=1, min=0.1)
