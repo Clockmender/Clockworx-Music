@@ -15,6 +15,8 @@ class CM_PT_PanelDesign(Panel):
 
     def draw(self, context):
         layout = self.layout
+        row = layout.row()
+        row.operator("cm_audio.stop_all_audio", text="Stop All Audio", icon="SNAP_FACE")
         cm_pg = context.scene.cm_pg
         box = layout.box()
         box.label(text="Execution on Frame Change")
