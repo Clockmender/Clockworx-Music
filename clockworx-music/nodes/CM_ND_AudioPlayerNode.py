@@ -36,6 +36,6 @@ class CM_ND_AudioPlayerNode(bpy.types.Node, CM_ND_BaseNode):
         else:
             sockets = self.inputs.keys()
             play_sound = get_socket_values(self, sockets, self.inputs)[1]
-            
+
         if isinstance(sound, aud.Sound) and play_sound:
             aud.Device().play(sound)

@@ -5,7 +5,7 @@ from bpy.types import (
     NodeSocketBool,
 )
 from .._base.base_node import CM_ND_BaseNode
-from ..cm_functions import get_socket_values
+from ..cm_functions import get_socket_values, connected_node_output
 
 class CM_ND_AudioFileNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.file_node"
@@ -32,11 +32,32 @@ class CM_ND_AudioFileNode(bpy.types.Node, CM_ND_BaseNode):
         cm = bpy.context.scene.cm_pg
         sound = aud.Sound.file(bpy.path.abspath(self.file_name_prop))
         sound = sound.resample(cm.samples, False)
-        sound = sound.volume(input_values[0])
-        start = input_values[1] * (60 / cm.bpm)
-        stop = start + (input_values[2] * (60 / cm.bpm))
+
+        if connected_node_output(self, 0) is not None:
+            volume = connected_node_output(self, 0)["float"]
+        else:
+            volume = input_values[0]
+        sound = sound.volume(volume)
+
+        if connected_node_output(self, 1) is not None:
+            start = connected_node_output(self, 1)["float"]
+        else:
+            start = input_values[1] * (60 / cm.bpm)
+        start = start * (60 / cm.bpm)
+
+        if connected_node_output(self, 2) is not None:
+            stop = connected_node_output(self, 2)["float"]
+        else:
+            stop = input_values[2] * (60 / cm.bpm)
+        stop = start + stop
         sound = sound.limit(start, stop)
-        if input_values[3]:
+
+        if connected_node_output(self, 3) is not None:
+            rev = connected_node_output(self, 3)["bool"]
+        else:
+            rev = input_values[3]
+
+        if rev:
             sound = sound.reverse()
         sound = sound.rechannel(cm.sound_channels)
         return {"sound": sound}

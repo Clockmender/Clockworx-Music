@@ -1,39 +1,64 @@
 import bpy
 from .._base.base_node import CM_ND_BaseNode
 
-from bpy.props import (
-   BoolProperty,
-   FloatProperty,
-   StringProperty,
+from bpy.props import StringProperty
+from bpy.types import (
+    NodeSocketFloat,
+    NodeSocketBool,
+    NodeSocketString,
 )
+from ..cm_functions import get_socket_values, connected_node_output
 
 class CM_ND_AudioNoteNode(bpy.types.Node, CM_ND_BaseNode):
     bl_idname = "cm_audio.note_node"
     bl_label = "Note Data: Raw"
     bl_icon = "SPEAKER"
 
-    note_name : StringProperty(name="Note", default="")
-    note_freq : FloatProperty(name="Frequency", default=0.0, min=0, max=32000)
-    note_vol : FloatProperty(name="Volume", default=1, min=0, max=10)
-    note_dur : FloatProperty(name="Length (B)", default=1, min=0.001)
-    note_rev: BoolProperty(name="Reverse", default=False)
-
     def init(self, context):
         super().init(context)
         self.outputs.new("cm_socket.note", "Note Data")
+        self.inputs.new("NodeSocketString", "Note Name")
+        self.inputs.new("NodeSocketFloat", "Frequency")
+        self.inputs.new("NodeSocketFloat", "volume")
+        self.inputs.new("NodeSocketFloat", "Length (B)")
+        self.inputs.new("NodeSocketBool", "Reverse")
 
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "note_name")
-        layout.prop(self, "note_freq")
-        layout.prop(self, "note_vol")
-        layout.prop(self, "note_dur")
-        layout.prop(self, "note_rev")
+    def get_sound(self):
+        sockets = self.inputs.keys()
+        input_values = get_socket_values(self, sockets, self.inputs)
+
+        if connected_node_output(self, 0) is not None:
+            note_name = connected_node_output(self, 0)["text"]
+        else:
+            note_name = input_values[0]
+
+        if connected_node_output(self, 1) is not None:
+            note_freq = connected_node_output(self, 1)["float"]
+        else:
+            note_freq = input_values[1]
+
+        if connected_node_output(self, 2) is not None:
+            note_vol = connected_node_output(self, 2)["float"]
+        else:
+            note_vol = input_values[2]
+
+        if connected_node_output(self, 3) is not None:
+            note_dur = connected_node_output(self, 3)["float"]
+        else:
+            note_dur = input_values[3]
+
+        if connected_node_output(self, 4) is not None:
+            note_rev = connected_node_output(self, 4)["bool"]
+        else:
+            note_rev = input_values[4]
+
+        output = {}
+        output["note_name"] = note_name
+        output["note_freq"] = note_freq
+        output["note_vol"] = note_vol
+        output["note_dur"] = note_dur
+        output["note_rev"] = note_rev
+        return output
 
     def output(self):
-        output = {}
-        output["note_name"] = self.note_name
-        output["note_freq"] = self.note_freq
-        output["note_vol"] = self.note_vol
-        output["note_dur"] = self.note_dur
-        output["note_rev"] = self.note_rev
-        return output
+        return self.get_sound()
