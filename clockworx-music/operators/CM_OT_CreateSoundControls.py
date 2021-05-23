@@ -44,7 +44,7 @@ class CM_OT_CreateSoundControls(bpy.types.Operator):
                     high=freq_l[i + 1],
                     attack=cm_node.attack,
                     release=cm_node.release,
-                    threshold=cm_node.release,
+                    threshold=cm_node.threshold,
                     use_accumulate=cm_node.use_accumulate,
                     use_additive=cm_node.use_additive,
                     use_square=cm_node.use_square,
