@@ -284,9 +284,11 @@ categories = [
         NodeItem("cm_audio.object_note_node"),
         NodeItem("cm_audio.objects_node"),
         NodeItem("cm_audio.objects__filter_node"),
+        NodeItem("cm_audio.object_data_node"),
         NodeItem("cm_audio.shapekey_node"),
         NodeItem("cm_audio.file_node"),
         NodeItem("cm_audio.text_node"),
+        NodeItem("cm_audio.vocoder_node"),
     ]),
     AudioOuputNodeCategory("AUDIO_OUTPUT_CATEGORY", "Outputs", items = [
         NodeItem("cm_audio.loop_file_node"),

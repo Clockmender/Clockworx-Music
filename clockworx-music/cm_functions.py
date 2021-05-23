@@ -427,3 +427,9 @@ def get_fret_four(note_idx, off_set):
         return fret_list_four[note_idx + off_set]
     else:
         return None
+
+def mix_dry_wet(sound_d, sound_w, dry_vol, wet_vol):
+    sound_d = sound_d.volume(dry_vol)
+    sound_w = sound_w.volume(wet_vol)
+    sound = sound_d.mix(sound_w)
+    return sound
