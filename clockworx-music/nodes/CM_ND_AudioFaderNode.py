@@ -1,9 +1,12 @@
 import bpy
 import aud
 from .._base.base_node import CM_ND_BaseNode
-
+from bpy.types import NodeSocketFloat
 from ..cm_functions import (
     connected_node_sound,
+    connected_node_output,
+    get_socket_values,
+    mix_dry_wet,
 )
 
 class CM_ND_AudioFaderNode(bpy.types.Node, CM_ND_BaseNode):
@@ -22,6 +25,8 @@ class CM_ND_AudioFaderNode(bpy.types.Node, CM_ND_BaseNode):
     def init(self, context):
         super().init(context)
         self.inputs.new("cm_socket.sound", "Audio")
+        self.inputs.new("NodeSocketFloat", "Dry Volume")
+        self.inputs.new("NodeSocketFloat", "Wet Volume")
         self.outputs.new("cm_socket.sound", "Audio")
 
     def draw_buttons(self, context, layout):
@@ -36,21 +41,34 @@ class CM_ND_AudioFaderNode(bpy.types.Node, CM_ND_BaseNode):
 
     def get_sound(self):
         cm = bpy.context.scene.cm_pg
+        cm = bpy.context.scene.cm_pg
+        sockets = self.inputs.keys()
+        input_values = get_socket_values(self, sockets, self.inputs)
+        if connected_node_output(self, 1) is not None:
+            dry_vol = connected_node_output(self, 1)["float"]
+        else:
+            dry_vol = input_values[1]
+
+        if connected_node_output(self, 2) is not None:
+            wet_vol = connected_node_output(self, 2)["float"]
+        else:
+            wet_vol = input_values[2]
+
         input = connected_node_sound(self, 0)
         if isinstance(input, dict):
             if "sound" in input.keys():
-                sound = input["sound"]
-                if isinstance(sound, aud.Sound):
+                sound_d = input["sound"]
+                sound_w = input["sound"]
+                if isinstance(sound_w, aud.Sound):
                     start_in = self.start_prop * (60 / cm.bpm)
                     length_in = self.length_prop * (60 / cm.bpm)
                     start_out = self.starto_prop * (60 / cm.bpm)
                     length_out = self.lengtho_prop * (60 / cm.bpm)
-                    if sound == None:
-                        return None
                     if self.fade_in_prop:
-                        sound = sound.fadein(start_in, length_in)
+                        sound_w = sound_w.fadein(start_in, length_in)
                     if self.fade_out_prop:
-                        sound = sound.fadeout(start_out, length_out)
+                        sound_w = sound_w.fadeout(start_out, length_out)
+                    sound = mix_dry_wet(sound_d, sound_w, dry_vol, wet_vol)
                     return {"sound": sound}
         return None
 
