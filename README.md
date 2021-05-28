@@ -1,8 +1,14 @@
 # Clockworx-Music
 
+This software suite is a Blender Add-on designed to work with Blender Versin 2.9x and higher.
+
+<img width="158" alt="Screenshot 2021-05-28 at 13 04 45" src="https://user-images.githubusercontent.com/29657804/119981231-4a367200-bfb5-11eb-893d-f9dd6bc4bd3e.png">
+
+https://www.blender.org
+
 ![Main Image 1](https://github.com/Clockmender/Clockworx-Music/blob/master/images/cm-3.png)
 
-A set of Nodes and New Node Editor to produce Music from Animations and Animations from Music
+A set of Nodes and New Node Editor to produce Music from Animations and Animations from Music, with Live! MIDI control included.
 
 Very much a WIP for now, some experimental code that will need making into a fully compliant Blender Add-on.
 
