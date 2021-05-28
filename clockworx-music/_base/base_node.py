@@ -24,7 +24,7 @@ class CM_ND_BaseNode:
             self.color = (0.4, 0.4, 0.3)
         elif "collections_" in self.bl_idname:
             self.color = (0.3, 0.4, 0.3)
-        elif "bones_" in self.bl_idname:
+        elif "bone" in self.bl_idname:
             self.color = (0.3, 0.3, 0.4)
         elif "shapekey_" in self.bl_idname:
             self.color = (0.1, 0.4, 0.1)
