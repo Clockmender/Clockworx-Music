@@ -26,7 +26,7 @@ bl_info = {
     "author": "Alan Odom (Clockmender)",
     "version": (0, 0, 1),
     "blender": (2, 80, 0),
-    "location": "Clockworx Node Tree > UI > PDT",
+    "location": "Clockworx Node Tree > UI > CMN",
     "warning": "Don't do it, just don't even THINK of doing it!",
     "category": "Node",
 }
@@ -271,6 +271,7 @@ categories = [
     ]),
     AudioInputNodeCategory("AUDIO_INPUT_CATEGORY", "Inputs", items = [
         NodeItem("cm_audio.bones_node"),
+        NodeItem("cm_audio.bone_data_node"),
         NodeItem("cm_audio.bool_node"),
         NodeItem("cm_audio.collections_node"),
         NodeItem("cm_audio.collections_filter_node"),
@@ -288,7 +289,6 @@ categories = [
         NodeItem("cm_audio.shapekey_node"),
         NodeItem("cm_audio.file_node"),
         NodeItem("cm_audio.text_node"),
-        NodeItem("cm_audio.vocoder_node"),
     ]),
     AudioOuputNodeCategory("AUDIO_OUTPUT_CATEGORY", "Outputs", items = [
         NodeItem("cm_audio.loop_file_node"),
@@ -324,6 +324,7 @@ categories = [
         NodeItem("cm_audio.reverb_node"),
         NodeItem("cm_audio.reverse_node"),
         NodeItem("cm_audio.separator_node"),
+        NodeItem("cm_audio.vocoder_node"),
         NodeItem("cm_audio.volume_node"),
     ]),
     AudioSequenceNodeCategory("AUDIO_SEQUENCE_CATEGORY", "Sequences", items = [
@@ -339,6 +340,7 @@ categories = [
         NodeItem("cm_audio.midi_guitar_play_node"),
         NodeItem("cm_audio.piano_roll_node"),
         NodeItem("cm_audio.midi_float_anim_node"),
+        NodeItem("cm_audio.midi_float_out_node"),
         NodeItem("cm_audio_midi_anim_node"),
         NodeItem("cm_audio.object_loc_node"),
         NodeItem("cm_audio.object_float_anim_node"),
