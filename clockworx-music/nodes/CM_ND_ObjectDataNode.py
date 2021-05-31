@@ -48,7 +48,6 @@ class CM_ND_ObjectDataNode(bpy.types.Node, CM_ND_BaseNode):
     def get_sound(self):
         input_1 = connected_node_output(self, 0)
         if isinstance(input_1, dict):
-            objects = []
             if "objects" in input_1.keys():
                 con_obj = input_1["objects"]
         else:

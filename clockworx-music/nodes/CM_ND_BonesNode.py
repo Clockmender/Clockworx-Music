@@ -51,10 +51,8 @@ class CM_ND_BonesNode(bpy.types.Node, CM_ND_BaseNode):
             bone_list = [b for b in object.pose.bones if self.bone in b.name]
             if len(bone_list) == 1:
                 bone = bone_list[0]
-                cm.message = f"'{object.name}'-'{bone.name}' Returned"
                 return {"bones": bone}
             elif len(bone_list) > 1:
-                cm.message = f"List of Bones Returned"
                 return{"bones": bone_list}
             else:
                 cm.error = f"No Bone Found"
