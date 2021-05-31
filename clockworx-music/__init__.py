@@ -26,8 +26,9 @@ bl_info = {
     "author": "Alan Odom (Clockmender)",
     "version": (0, 0, 1),
     "blender": (2, 80, 0),
-    "location": "Clockworx Node Tree > UI > CMN",
+    "location": "Clockworx Node Tree > UI > CMN, View3D > UI > CMN",
     "warning": "Don't do it, just don't even THINK of doing it!",
+    "doc_url": "https://github.com/Clockmender/Clockworx-Music/wiki",
     "category": "Node",
 }
 
