@@ -40,9 +40,17 @@ You should make sure pip is installed by navigating to the blender python/bin di
 
 ./python3.7m -m ensurepip
 
+For Blender 2.93:
+
+./python3.9 -m ensurepip
+
 Then install the libraries (I think Windows might be python3.7m.exe)
 
 ./python3.7m -m pip install pygame
+
+For Blender 2.93:
+
+./python3.9 -m pip install pygame
 
 ### Make sure you use the ./ infront of the python, or you will not use the local Blender Python
 
