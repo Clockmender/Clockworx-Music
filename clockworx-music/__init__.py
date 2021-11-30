@@ -60,6 +60,22 @@ from bpy.props import (
     FloatVectorProperty,
 )
 
+# Load PyGame Module if not present in BLender Python
+import subprocess
+import sys
+
+try:
+    import pip
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "ensurepip"])
+try:
+    import pygame as pg
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", 'pygame'])
+finally:
+    import pygame as pg
+# End Import Pygame
+
 
 class AudioNodeTree(bpy.types.NodeTree):
     bl_description = "CM Audio Node Trees"
