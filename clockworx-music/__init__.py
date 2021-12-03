@@ -426,7 +426,7 @@ def register():
         try:
             bpy.utils.register_class(cls)
         except:
-            print(str(cls))
+            print(f"Failed Class: {cls}")
 
     Scene.cm_pg = PointerProperty(type=CMSceneProperties)
 
@@ -438,7 +438,7 @@ def unregister():
         try:
             bpy.utils.unregister_class(cls)
         except:
-            print(str(cls))
+            print(f"Failed Class: {cls}")
     nodeitems_utils.unregister_node_categories("AUDIO_CATEGORIES")
 
     del Scene.cm_pg
