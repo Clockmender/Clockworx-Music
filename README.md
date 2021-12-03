@@ -1,5 +1,7 @@
 # Clockworx-Music
 
+### This version now loads Pip and PyGame automatically.
+
 This software suite is a Blender Add-on designed to work with Blender Version 2.9x and higher.
 
 <img width="158" alt="Screenshot 2021-05-28 at 13 04 45" src="https://user-images.githubusercontent.com/29657804/119981231-4a367200-bfb5-11eb-893d-f9dd6bc4bd3e.png">
