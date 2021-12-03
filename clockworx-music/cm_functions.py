@@ -113,7 +113,8 @@ def get_socket_values(node, sockets, node_inputs):
         if socket:
             if len(socket.values()) > 0:
                 #maybe should be default_value...
-                inputs.append(socket.values()[0])
+                #inputs.append(socket.values()[0]) Worked in 2.93!
+                inputs.append(socket.values())
             else:
                 inputs.append(None)
         else:

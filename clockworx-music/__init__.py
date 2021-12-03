@@ -266,7 +266,7 @@ categories = [
         NodeItem("cm_audio.bounce_node"),
         NodeItem("cm_audio.compare_node"),
         NodeItem("cm_audio.condition_node"),
-        NodeItem("cm_audio.loop_node"),
+        NodeItem("cm_audio.audio_loop_node"),
         NodeItem("cm_audio.in_range_node"),
         NodeItem("cm_audio.logic_node"),
         NodeItem("cm_audio.colour_material_node"),
@@ -349,7 +349,7 @@ categories = [
         NodeItem("cm_audio.sequence_node"),
         NodeItem("cm_audio.slicer_node"),
         NodeItem("cm_audio.join_node"),
-        NodeItem("cm_audio.loop_node"),
+        NodeItem("cm_audio.dc_loop_node"),
         NodeItem("cm_audio.mix_node"),
         NodeItem("cm_audio.pingpong_node"),
     ]),
@@ -423,7 +423,10 @@ classes.extend(nodes)
 def register():
 
     for cls in classes:
-        bpy.utils.register_class(cls)
+        try:
+            bpy.utils.register_class(cls)
+        except:
+            print(str(cls))
 
     Scene.cm_pg = PointerProperty(type=CMSceneProperties)
 
@@ -432,7 +435,10 @@ def register():
 
 def unregister():
     for cls in classes:
-        bpy.utils.unregister_class(cls)
+        try:
+            bpy.utils.unregister_class(cls)
+        except:
+            print(str(cls))
     nodeitems_utils.unregister_node_categories("AUDIO_CATEGORIES")
 
     del Scene.cm_pg
