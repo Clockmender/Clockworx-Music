@@ -349,7 +349,7 @@ categories = [
         NodeItem("cm_audio.sequence_node"),
         NodeItem("cm_audio.slicer_node"),
         NodeItem("cm_audio.join_node"),
-        NodeItem("cm_audio.loop_node"),
+        NodeItem("cm_audio.dc_loop_node"),
         NodeItem("cm_audio.mix_node"),
         NodeItem("cm_audio.pingpong_node"),
     ]),
