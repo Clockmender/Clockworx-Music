@@ -106,6 +106,7 @@ class CM_ND_MidiAnimNode(bpy.types.Node, CM_ND_BaseNode):
                 values.append(buffer_in[num][self.con_pz] / 127)
             else:
                 values.append(0)
+
             vector_delta, euler_delta, scale_delta = off_set(values, self.factors)
 
             if self.use_bones and bone is not None:

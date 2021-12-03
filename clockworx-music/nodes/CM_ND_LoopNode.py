@@ -14,7 +14,7 @@ from ..cm_functions import (
 )
 
 class CM_ND_LoopNode(bpy.types.Node, CM_ND_BaseNode):
-    bl_idname = "cm_audio.loop_node"
+    bl_idname = "cm_audio.dc_loop_node"
     bl_label = "Dr. Clock Loop Programmer"
     bl_icon = "SPEAKER"
     bl_width_default = 500
@@ -356,7 +356,7 @@ class CM_ND_LoopNode(bpy.types.Node, CM_ND_BaseNode):
             if len(str(anim_cycle)) == 1:
                 vars = [k for k in dir(self) if k.startswith("pos_")
                 and k[-1] == str(anim_cycle)
-                and k[-2] is not "1"]
+                and k[-2] != "1"]
             else:
                 vars = [k for k in dir(self) if k.startswith("pos_")
                 and k[-2:] == str(anim_cycle)]

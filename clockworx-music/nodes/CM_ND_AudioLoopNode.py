@@ -8,8 +8,8 @@ from ..cm_functions import (
 
 
 class CM_ND_AudioLoopNode(bpy.types.Node, CM_ND_BaseNode):
-    bl_idname = "cm_audio.loop_node"
-    bl_label = "Loop"
+    bl_idname = "cm_audio.audio_loop_node"
+    bl_label = "Audio Loop"
     bl_icon = "SPEAKER"
 
     loop_prop : bpy.props.IntProperty(name="Loops #", default=1, soft_min=0,

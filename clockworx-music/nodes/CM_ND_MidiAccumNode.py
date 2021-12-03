@@ -55,20 +55,21 @@ class CM_ND_MidiAccumNode(bpy.types.Node, CM_ND_BaseNode):
                             if b[0][1] == self.con_plus:
                                 cm.midi_data["params_cu"][self.con_plus] = round(
                                     (cm.midi_data["params_cu"][self.con_plus]
-                                     + (b[0][2] / 127)), 5
+                                     + (b[0][2] / 2)), 5
                                 )
                             elif b[0][1] == self.con_minus:
                                 cm.midi_data["params_cu"][self.con_plus] = round(
                                     (cm.midi_data["params_cu"][self.con_plus]
-                                     - (b[0][2] / 127)), 5
+                                     - (b[0][2] / 2)), 5
                                 )
                 else:
                     print("Two Controls are the same ID")
 
             if cm.midi_debug:
-                print(str(cm.midi_data["notes_cu"]))
-                print(str(cm.midi_data["params_cu"]))
-            return [cm.midi_data["notes_cu"][self.con_plus], cm.midi_data["params_cu"][self.con_plus]]
+                print("DEBUG")
+                print([cm.midi_data["notes_cu"][self.con_plus], cm.midi_data["params_cu"][self.con_plus]])
+
+            return [cm.midi_data["notes_cu"], cm.midi_data["params_cu"]]
         else:
             return None
 
